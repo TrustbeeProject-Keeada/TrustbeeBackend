@@ -1,16 +1,5 @@
 import { z } from "zod";
 
-export interface USER {
-  id: string;
-  firstname: string;
-  lastname: string;
-  email: string;
-  admin: boolean;
-  password: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export const createUserValidation = z.object({
   body: z.object({
     firstname: z.string("Please enter a valid name").min(2),
