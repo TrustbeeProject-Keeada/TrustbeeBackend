@@ -8,7 +8,11 @@ import {
   updateUserService,
 } from "../services/user.service";
 
-export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const users = await getAllUsersService();
 
@@ -22,7 +26,11 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const id = req.params.id as string;
     const user = await getUserByIdService(id);
@@ -56,7 +64,11 @@ export const createUser = async (
   }
 };
 
-export const updateUserById = async (req: Request, res: Response, next: NextFunction) => {
+export const updateUserById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const id = req.params.id as string;
     const updateData = req.body;
@@ -67,13 +79,20 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
       return res.status(404).json({ status: `User with id ${id} not found` });
     }
 
-    res.status(200).json({ status: `User with id ${id} updated successfully`, user: updateUser });
+    res.status(200).json({
+      status: `User with id ${id} updated successfully`,
+      user: updateUser,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUserById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const id = req.params.id as string;
     const user = await deleteUserService(id);
@@ -82,7 +101,9 @@ export const deleteUserById = async (req: Request, res: Response, next: NextFunc
       return res.status(404).json({ status: `User with id ${id} not found` });
     }
 
-    res.status(200).json({ status: `User with id ${id} deleted successfully`, user });
+    res
+      .status(200)
+      .json({ status: `User with id ${id} deleted successfully`, user });
   } catch (error) {
     next(error);
   }
