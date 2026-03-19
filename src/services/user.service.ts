@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
-import { pool } from "../config/db";
-import { USER } from "../models/user.model";
-import { AppError } from "../utils/app.error";
+import { pool } from "../config/db.js";
+import { USER } from "../models/user.model.js";
+import { AppError } from "../utils/app.error.js";
 
 const fieldsToReturn =
   "id, firstname, lastname, email, admin, created_at, updated_at";
