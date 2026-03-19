@@ -5,9 +5,9 @@ import {
   getUserById,
   getUsers,
   updateUserById,
-} from "../controllers/user.controller";
-import { validate } from "../middleware/validate.middleware";
-import { createUserValidation } from "../models/user.model";
+} from "../controllers/user.controller.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { createUserValidation } from "../models/user.model.js";
 
 const router = Router();
 

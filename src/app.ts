@@ -1,6 +1,6 @@
 import express, { type Request, type Response } from "express";
-import userRoutes from "./routes/user.routes";
-import { errorHandler } from "./middleware/error.middleware";
+import userRoutes from "./routes/user.routes.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 export const createApp = () => {
   const app = express();

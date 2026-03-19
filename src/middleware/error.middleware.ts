@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import mongoose from "mongoose";
 import { ZodError } from "zod";
-import { AppError } from "../utils/app.error";
+import { AppError } from "../utils/app.error.js";
 
 // src/middleware/error.ts
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -12,7 +12,9 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   let statusCode = 500;
   let message = "Server Error";
   let details: unknown;
-  let errors: Array<{ path: string; message: string; code?: string }> | undefined;
+  let errors:
+    | Array<{ path: string; message: string; code?: string }>
+    | undefined;
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
@@ -42,11 +44,19 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof mongoose.Error.ValidationError) {
     statusCode = 400;
     message = "Database Validation Error";
-    details = Object.values(err.errors).map((e) => ({ path: e.path, message: e.message }));
+    details = Object.values(err.errors).map((e) => ({
+      path: e.path,
+      message: e.message,
+    }));
   }
 
   // Mongo duplicate key error (unique indexes), e.g. duplicate email
-  if (typeof err === "object" && err !== null && "code" in err && (err as any).code === 11000) {
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as any).code === 11000
+  ) {
     statusCode = 409;
     message = "Duplicate key error";
     details = (err as any).keyValue ?? (err as any).keyPattern;
