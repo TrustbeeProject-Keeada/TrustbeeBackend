@@ -11,3 +11,93 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// Define your database schema here
+
+enum Role {
+  JOB_SEEKER
+  COMPANY_RECRUITER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum JobStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model JobSeeker {
+  id Int @id @default(autoincrement())
+
+  email     String @unique
+  firstName String
+  lastName  String
+  password  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role Role @default(JOB_SEEKER)
+
+  phoneNumber    String
+  profilePicture String?
+  city           String
+  languages      String[]
+  skills         String[]
+  bio            String
+  portfolioLink  String
+
+  // ! Extra 
+  accountCompletionRate Int        @default(0)
+  sentMessages          Messages[] @relation("JobSeekerSentMessages")
+  receivedMessages      Messages[] @relation("JobSeekerReceivedMessages")
+}
+
+// ? login is password and email
+
+model CompanyRecruiter {
+  id                 Int        @id @default(autoincrement())
+  email              String     @unique
+  companyName        String
+  password           String
+  organizationNumber Int
+  description        String
+  phoneNumber        Int
+  logoUrl            String?
+  role               Role       @default(COMPANY_RECRUITER)
+  jobs               Job[]
+  sentMessages       Messages[] @relation("RecruiterSentMessages")
+  receivedMessages   Messages[] @relation("RecruiterReceivedMessages")
+}
+
+model Job {
+  id          Int              @id @default(autoincrement())
+  company     CompanyRecruiter @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   Int
+  title       String
+  description String
+  status      JobStatus        @default(ACTIVE)
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Messages {
+  id      Int    @id @default(autoincrement())
+  content String
+
+  // * Avsändare vem skickade?
+  senderJobSeeker   JobSeeker @relation("JobSeekerSentMessages", fields: [senderJobSeekerId], references: [id])
+  senderJobSeekerId Int
+
+  senderRecruiterId Int
+  senderRecruiter   CompanyRecruiter @relation("RecruiterSentMessages", fields: [senderRecruiterId], references: [id], onDelete: Cascade)
+
+  receiverJobSeeker   JobSeeker @relation("JobSeekerReceivedMessages", fields: [receiverJobSeekerId], references: [id])
+  receiverJobSeekerId Int
+
+  receiverRecruiter   CompanyRecruiter @relation("RecruiterReceivedMessages", fields: [receiverRecruiterId], references: [id])
+  receiverRecruiterId Int
+
+  createdAt DateTime @default(now())
+}

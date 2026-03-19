@@ -3,11 +3,14 @@ import { pool } from "../config/db";
 import { USER } from "../models/user.model";
 import { AppError } from "../utils/app.error";
 
-const fieldsToReturn = "id, firstname, lastname, email, admin, created_at, updated_at";
+const fieldsToReturn =
+  "id, firstname, lastname, email, admin, created_at, updated_at";
 
 export const getAllUsersService = async () => {
   // return users without password field
-  const results = await pool.query<Partial<USER>>(`SELECT ${fieldsToReturn} FROM users`);
+  const results = await pool.query<Partial<USER>>(
+    `SELECT ${fieldsToReturn} FROM users`,
+  );
 
   return results.rows;
 };
@@ -33,16 +36,24 @@ export const createUserService = async (data: Partial<USER>) => {
   return result.rows[0];
 };
 
-export const updateUserService = async (id: string, updateData: Partial<USER>) => {
+export const updateUserService = async (
+  id: string,
+  updateData: Partial<USER>,
+) => {
   const fields = Object.keys(updateData);
   const values = Object.values(updateData);
 
-  const setClauses = fields.map((field, index) => `${field} = $${index + 1}`).join(", ");
+  const setClauses = fields
+    .map((field, index) => `${field} = $${index + 1}`)
+    .join(", ");
 
   if (setClauses.includes("password")) {
     const passwordIndex = fields.findIndex((field) => field === "password");
     if (passwordIndex !== -1) {
-      const encryptedPassword = await bcrypt.hash(values[passwordIndex] as string, 10);
+      const encryptedPassword = await bcrypt.hash(
+        values[passwordIndex] as string,
+        10,
+      );
       values[passwordIndex] = encryptedPassword;
     }
   }
