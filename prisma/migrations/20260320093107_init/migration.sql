@@ -14,13 +14,13 @@ CREATE TABLE "JobSeeker" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'JOB_SEEKER',
-    "phoneNumber" TEXT NOT NULL,
+    "phoneNumber" TEXT,
     "profilePicture" TEXT,
-    "city" TEXT NOT NULL,
+    "city" TEXT,
     "languages" TEXT[],
     "skills" TEXT[],
-    "bio" TEXT NOT NULL,
-    "portfolioLink" TEXT NOT NULL,
+    "bio" TEXT,
+    "portfolioLink" TEXT,
     "accountCompletionRate" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "JobSeeker_pkey" PRIMARY KEY ("id")
@@ -33,8 +33,8 @@ CREATE TABLE "CompanyRecruiter" (
     "companyName" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "organizationNumber" INTEGER NOT NULL,
-    "description" TEXT NOT NULL,
-    "phoneNumber" INTEGER NOT NULL,
+    "description" TEXT,
+    "phoneNumber" TEXT NOT NULL,
     "logoUrl" TEXT,
     "role" "Role" NOT NULL DEFAULT 'COMPANY_RECRUITER',
 
