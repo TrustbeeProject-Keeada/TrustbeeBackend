@@ -57,12 +57,13 @@ model JobSeeker {
 
 model CompanyRecruiter {
   id                 Int        @id @default(autoincrement())
+  // ! register is email, password, company name, organization number, phone number, description OPTIONAL, logo url OPTIONAL
   email              String     @unique
   companyName        String
   password           String
   organizationNumber Int
-  description        String
-  phoneNumber        Int
+  description        String?
+  phoneNumber        String
   logoUrl            String?
   role               Role       @default(COMPANY_RECRUITER)
   jobs               Job[]
