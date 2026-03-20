@@ -1,20 +1,16 @@
 import { Router } from "express";
 import {
-  createUser,
-  deleteUserById,
-  getUserById,
-  getUsers,
-  updateUserById,
-} from "../controllers/user.controller.js";
-import { validate } from "../middleware/validate.middleware.js";
-import { createUserValidation } from "../models/user.model.js";
+  deleteJobSeekerById,
+  getJobSeekerById,
+  getJobSeekers,
+  updateJobSeekerById,
+} from "../controllers/jobseeker.controller.js";
 
 const router = Router();
 
-router.get("/", getUsers);
-router.get("/:id", getUserById);
-router.put("/:id", updateUserById);
-router.delete("/:id", deleteUserById);
-router.post("/", validate(createUserValidation), createUser);
+router.get("/", getJobSeekers);
+router.get("/:id", getJobSeekerById);
+router.put("/:id", updateJobSeekerById);
+router.delete("/:id", deleteJobSeekerById);
 
 export default router;
