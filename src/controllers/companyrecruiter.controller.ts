@@ -1,20 +1,22 @@
-import { Request, Response, NextFunction } from "express";
+// import { Request, Response, NextFunction } from "express";
 
-// ! CRUD operations for job recruiter
+// // ! CRUD operations for job recruiter
 
-// ! Register company account
-export const registerJobRecruiter = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {};
+// // ? Get all job recruiters
+// export const getAllCompanyRecruiters = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const companyRecruiters = await getAllCompanyRecruitersService();
+//     res.status(200).json(companyRecruiters);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+// // ? Get a single job recruiter by ID
 
-// ? Login company account
+// // ? Update job recruiter  details by ID
 
-// ? Get all job recruiters
-
-// ? Get a single job recruiter by ID
-
-// ? Update job recruiter details
-
-// ? Delete job recruiter account
+// // ? Delete job recruiter account by ID
