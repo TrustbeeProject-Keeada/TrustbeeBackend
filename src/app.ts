@@ -10,6 +10,7 @@ export const createApp = () => {
 
   // job seeker routes
   app.use("/api/jobseekers", jobSeekerRoutes);
+  // app.use("/api/companyrecruiter", )
 
   // auth routes
   app.use("/api/auth", authRoutes);
