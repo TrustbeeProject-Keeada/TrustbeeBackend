@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
-import { CreateJobSeekerTypeZ } from "../models/jobseeker.model.js";
+import { RegisterJobSeekerTypeZ } from "../models/jobseeker.model.js";
 
 export const getAllJobSeekersService = async () => {
   const jobseekers = await prisma.jobSeeker.findMany({
@@ -32,14 +32,14 @@ export const getJobSeekerByIdService = async (id: number) => {
 
 export const updateJobSeekerByIdService = async (
   id: number,
-  data: CreateJobSeekerTypeZ,
+  data: RegisterJobSeekerTypeZ,
 ) => {
   const hashedPassword = await bcrypt.hash(data.password, 12);
   const updatedJobSeeker = await prisma.jobSeeker.update({
     where: { id: id },
     data: {
-      firstName: data.firstName,
-      lastName: data.lastName,
+      firstName: data.firstname,
+      lastName: data.lastname,
       email: data.email,
       password: hashedPassword,
     },
