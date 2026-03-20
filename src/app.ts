@@ -1,5 +1,6 @@
 import express, { type Request, type Response } from "express";
-import userRoutes from "./routes/user.routes.js";
+import jobSeekerRoutes from "./routes/jobseeker.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 export const createApp = () => {
@@ -7,7 +8,11 @@ export const createApp = () => {
 
   app.use(express.json());
 
-  app.use("/api", userRoutes);
+  // job seeker routes
+  app.use("/api/jobseekers", jobSeekerRoutes);
+
+  // auth routes
+  app.use("/api/auth", authRoutes);
 
   app.use(errorHandler);
 

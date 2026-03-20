@@ -10,7 +10,7 @@ const router = Router();
 
 router.get("/", getJobSeekers);
 router.get("/:id", getJobSeekerById);
-router.put("/:id", updateJobSeekerById);
+router.patch("/:id", updateJobSeekerById);
 router.delete("/:id", deleteJobSeekerById);
 
 export default router;

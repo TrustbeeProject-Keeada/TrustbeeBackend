@@ -1,9 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
-import { CreateJobSeekerTypeZ } from "../models/jobseeker.model.js";
-import { registerJobSeekerService } from "../services/auth.service.js";
+import { RegisterJobSeekerTypeZ } from "../models/jobseeker.model.js";
+import {
+  registerJobSeekerService,
+  logInJobSeekerService,
+} from "../services/auth.service.js";
 
 export const RegisterJobSeeker = async (
-  req: Request<{}, {}, CreateJobSeekerTypeZ>,
+  req: Request<{}, {}, RegisterJobSeekerTypeZ>,
   res: Response,
   next: NextFunction,
 ) => {
@@ -18,6 +21,28 @@ export const RegisterJobSeeker = async (
     res.status(201).json({
       status: "Job seeker created successfully",
       jobseeker: newJobSeeker,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const LogInJobSeeker = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const data = req.body;
+    const jobSeeker = await logInJobSeekerService(data);
+
+    if (!jobSeeker) {
+      return res.status(401).json({ status: "Invalid email or password" });
+    }
+
+    res.status(200).json({
+      status: "Job seeker logged in successfully",
+      jobseeker: jobSeeker,
     });
   } catch (error) {
     next(error);
