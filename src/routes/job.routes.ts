@@ -17,7 +17,7 @@ const router = Router();
 router.get("/", getAllJobs);
 router.get("/:id", getJobById);
 router.post("/", validate(createJobValidation), createJob);
-router.put("/:id", validate(updateJobValidation), updateJobById);
+router.patch("/:id", validate(updateJobValidation), updateJobById);
 router.delete("/:id", deleteJobById);
 
 export default router;
