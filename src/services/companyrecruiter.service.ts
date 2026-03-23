@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
-import { RegisterCompanyRecruiterTypeZ } from "../models/companyrecruiter.model.js";
+import { UpdateCompanyRecruiterTypeZ } from "../models/companyrecruiter.model.js";
 
 // ? Get all company recruiters.
 export const GetAllCompanyRecruitersService = async () => {
@@ -30,12 +30,14 @@ export const GetCompanyRecruiterByIdService = async (id: number) => {
   return companyRecruiter;
 };
 
-// ? Update comapny recruiter by id.
+// ? Update company recruiter by id.
 export const UpdateCompanyRecruiterByIdService = async (
   id: number,
-  data: RegisterCompanyRecruiterTypeZ,
+  data: UpdateCompanyRecruiterTypeZ,
 ) => {
-  const hashedPassword = await bcrypt.hash(data.password, 12);
+  const hashedPassword = data.password
+    ? await bcrypt.hash(data.password, 12)
+    : undefined;
   const updatedCompanyRecruiter = await prisma.companyRecruiter.update({
     where: { id: id },
     data: {

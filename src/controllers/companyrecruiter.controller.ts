@@ -65,6 +65,7 @@ export const UpdateCompanyRecruiterById = async (
         .status(404)
         .json({ status: `Company recruiter with id ${id} not found` });
     }
+
     res.status(200).json(updatedCompanyRecruiter);
   } catch (error) {
     next(error);
