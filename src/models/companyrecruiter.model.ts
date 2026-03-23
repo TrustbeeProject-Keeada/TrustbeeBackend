@@ -9,9 +9,9 @@ export const registerJobRecruiterValidation = z.object({
         .string()
         .min(8, "Password must be at least 8 characters long"),
       companyname: z.string().min(1, "Company name is required"),
-      organizationnumber: z.number(
-        "Organization number must be a positive integer",
-      ),
+      organizationnumber: z
+        .number()
+        .positive("Organization number must be a positive integer"),
       phonenumber: z
         .string()
         .regex(
