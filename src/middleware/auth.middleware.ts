@@ -2,17 +2,30 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { AppError } from "../utils/app.error.js";
 
+// 1. Detta säger åt TypeScript att Express Request-objekt nu har en 'jobseeker'
+declare global {
+  namespace Express {
+    interface Request {
+      jobseeker?: {
+        id: number; // Använder number eftersom ditt ID i databasen är en Int
+        role: string;
+      };
+    }
+  }
+}
+
 export const protect = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log(token);
 
   if (!token) {
-    throw new AppError("Unauthorized", 401);
+    // 2. Vi använder return next() istället för throw i en asynkron funktion!
+    return next(new AppError("Unauthorized", 401));
   }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
     const payload = decoded as JwtPayload;
@@ -33,7 +46,7 @@ export const restrictTo = (...roles: UserRole[]) => {
 
     if (!user || !roles.includes(user.role as UserRole)) {
       return res.status(403).json({
-        message: "Forbidden, you do not have have the required permissions",
+        message: "Forbidden, you do not have the required permissions",
       });
     }
     next();
