@@ -5,6 +5,7 @@ import {
   UpdateCompanyRecruiterById,
   DeleteCompanyRecruiterById,
 } from "../controllers/companyrecruiter.controller.js";
+import { validate } from "../middleware/validate.middleware.js";
 
 const router = Router();
 
