@@ -24,7 +24,13 @@ router.post(
   restrictTo("COMPANY_RECRUITER"),
   createJob,
 );
-router.patch("/:id", validate(updateJobValidation), updateJobById);
-router.delete("/:id", deleteJobById);
+router.patch(
+  "/:id",
+  validate(updateJobValidation),
+  protect,
+  restrictTo("COMPANY_RECRUITER"),
+  updateJobById,
+);
+router.delete("/:id", protect, restrictTo("COMPANY_RECRUITER"), deleteJobById);
 
 export default router;

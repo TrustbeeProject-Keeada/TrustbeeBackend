@@ -19,9 +19,9 @@ export const getAllJobsService = async () => {
   return jobs;
 };
 
-export const getJobByIdService = async (id: number) => {
+export const getJobByIdService = async (jobId: number) => {
   const job = await prisma.job.findUnique({
-    where: { id: id },
+    where: { id: jobId },
     select: {
       id: true,
       title: true,
@@ -30,7 +30,7 @@ export const getJobByIdService = async (id: number) => {
     },
   });
   if (!job) {
-    throw new AppError(`Job with id ${id} not found`, 404);
+    throw new AppError(`Job with id ${jobId} not found`, 404);
   }
   return job;
 };
@@ -54,31 +54,48 @@ export const createJobService = async (
 };
 
 export const updateJobByIdService = async (
-  id: number,
+  jobId: number,
   data: UpdateJobTypeZ,
   companyId: number,
 ) => {
-  const updatedJob = await prisma.job.update({
-    where: { id: id },
-    data: {
-      companyId: companyId,
-      title: data.title,
-      description: data.description,
-      expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
-    },
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
   });
-  if (!updatedJob) {
-    throw new AppError(`Job with id ${id} not found`, 404);
+
+  if (!job) {
+    throw new AppError("Job not found", 404);
   }
-  return updatedJob;
+
+  if (job.companyId !== companyId) {
+    throw new AppError("Forbidden", 403);
+  }
+
+  return await prisma.job.update({
+    where: { id: jobId },
+    data,
+  });
 };
 
-export const deleteJobByIdService = async (id: number) => {
+export const deleteJobByIdService = async (
+  jobId: number,
+  companyId: number,
+) => {
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+  });
+  if (!job) {
+    throw new AppError(`Job with id ${jobId} not found`, 404);
+  }
+
+  if (job.companyId !== companyId) {
+    throw new AppError("You are not the owner of this job", 403);
+  }
+
   const deletedJob = await prisma.job.delete({
-    where: { id: id },
+    where: { id: jobId },
   });
   if (!deletedJob) {
-    throw new AppError(`Job with id ${id} not found`, 404);
+    throw new AppError(`Job with id ${jobId} not found`, 404);
   }
   return deletedJob;
 };
