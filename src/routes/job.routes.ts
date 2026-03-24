@@ -19,9 +19,9 @@ router.get("/", getAllJobs);
 router.get("/:id", getJobById);
 router.post(
   "/",
+  validate(createJobValidation),
   protect,
   restrictTo("COMPANY_RECRUITER"),
-  validate(createJobValidation),
   createJob,
 );
 router.patch("/:id", validate(updateJobValidation), updateJobById);
