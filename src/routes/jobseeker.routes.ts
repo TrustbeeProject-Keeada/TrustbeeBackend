@@ -7,12 +7,24 @@ import {
 } from "../controllers/jobseeker.controller.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { updateJobSeekerValidation } from "../models/jobseeker.model.js";
+import { protect, restrictTo } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 router.get("/", getJobSeekers);
 router.get("/:id", getJobSeekerById);
-router.patch("/:id", validate(updateJobSeekerValidation), updateJobSeekerById);
-router.delete("/:id", deleteJobSeekerById);
+router.patch(
+  "/:id",
+  protect,
+  restrictTo("JOB_SEEKER", "ADMIN"),
+  validate(updateJobSeekerValidation),
+  updateJobSeekerById,
+);
+router.delete(
+  "/:id",
+  protect,
+  restrictTo("JOB_SEEKER", "ADMIN"),
+  deleteJobSeekerById,
+);
 
 export default router;

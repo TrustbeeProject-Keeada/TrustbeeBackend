@@ -21,16 +21,21 @@ router.post(
   "/",
   validate(createJobValidation),
   protect,
-  restrictTo("COMPANY_RECRUITER"),
+  restrictTo("COMPANY_RECRUITER", "ADMIN"),
   createJob,
 );
 router.patch(
   "/:id",
   validate(updateJobValidation),
   protect,
-  restrictTo("COMPANY_RECRUITER"),
+  restrictTo("COMPANY_RECRUITER", "ADMIN"),
   updateJobById,
 );
-router.delete("/:id", protect, restrictTo("COMPANY_RECRUITER"), deleteJobById);
+router.delete(
+  "/:id",
+  protect,
+  restrictTo("COMPANY_RECRUITER", "ADMIN"),
+  deleteJobById,
+);
 
 export default router;

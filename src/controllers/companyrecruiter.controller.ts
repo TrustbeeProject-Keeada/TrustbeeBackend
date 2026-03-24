@@ -56,6 +56,12 @@ export const UpdateCompanyRecruiterById = async (
     const id = req.params.id as string;
     const idInt = Number(id);
     const updateData = req.body;
+
+    if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
+      return res.status(403).json({
+        message: "Forbidden: You can only update your own profile",
+      });
+    }
     const updatedCompanyRecruiter = await UpdateCompanyRecruiterByIdService(
       idInt,
       updateData,
@@ -81,6 +87,12 @@ export const DeleteCompanyRecruiterById = async (
   try {
     const id = req.params.id as string;
     const idInt = Number(id);
+
+    if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
+      return res.status(403).json({
+        message: "Forbidden: You can only update your own profile",
+      });
+    }
     const deletedCompanyRecruiter =
       await DeleteCompanyRecruiterByIdService(idInt);
     if (!deletedCompanyRecruiter) {

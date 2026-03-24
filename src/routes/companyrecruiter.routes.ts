@@ -7,6 +7,7 @@ import {
 } from "../controllers/companyrecruiter.controller.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { updateJobRecruiterValidation } from "../models/companyrecruiter.model.js";
+import { protect, restrictTo } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
@@ -14,9 +15,16 @@ router.get("/", GetCompanyRecruiters);
 router.get("/:id", GetCompanyRecruitersById);
 router.patch(
   "/:id",
+  protect,
+  restrictTo("COMPANY_RECRUITER", "ADMIN"),
   validate(updateJobRecruiterValidation),
   UpdateCompanyRecruiterById,
 );
-router.delete("/:id", DeleteCompanyRecruiterById);
+router.delete(
+  "/:id",
+  protect,
+  restrictTo("COMPANY_RECRUITER", "ADMIN"),
+  DeleteCompanyRecruiterById,
+);
 
 export default router;
