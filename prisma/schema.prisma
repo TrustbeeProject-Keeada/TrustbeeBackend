@@ -39,13 +39,15 @@ model JobSeeker {
 
   role Role @default(JOB_SEEKER)
 
-  phoneNumber    String?
-  profilePicture String?
-  city           String?
-  languages      String[]
-  skills         String[]
-  bio            String?
-  portfolioLink  String?
+  phoneNumber       String?
+  profilePicture    String?
+  city              String?
+  languages         String[]
+  skills            String[]
+  bio               String?
+  portfolioLink     String?
+  CV                String?
+  PersonalStatement String?
 
   // ! Extra 
   accountCompletionRate Int        @default(0)
