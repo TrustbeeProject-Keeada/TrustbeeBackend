@@ -5,6 +5,17 @@ import {
 } from "../services/messages.service.js";
 import { AppError } from "../utils/app.error.js";
 
+declare global {
+  namespace Express {
+    interface Request {
+      jobseeker?: {
+        id: number;
+        role: string;
+      };
+    }
+  }
+}
+
 export const sendMessage = async (
   req: Request,
   res: Response,
