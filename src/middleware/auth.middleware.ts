@@ -6,7 +6,7 @@ import { AppError } from "../utils/app.error.js";
 declare global {
   namespace Express {
     interface Request {
-      jobseeker?: {
+      user?: {
         id: number; // Använder number eftersom ditt ID i databasen är en Int
         role: string;
       };
@@ -30,7 +30,7 @@ export const protect = async (
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
     const payload = decoded as JwtPayload;
 
-    req.jobseeker = { id: payload.id, role: payload.role };
+    req.user = { id: payload.id, role: payload.role };
     next();
   } catch (error) {
     console.log(error);
@@ -42,7 +42,7 @@ type UserRole = "JOB_SEEKER" | "ADMIN" | "COMPANY_RECRUITER";
 
 export const restrictTo = (...roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const user = req.jobseeker;
+    const user = req.user;
 
     if (!user || !roles.includes(user.role as UserRole)) {
       return res.status(403).json({

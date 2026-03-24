@@ -35,10 +35,13 @@ export const getJobByIdService = async (id: number) => {
   return job;
 };
 
-export const createJobService = async (data: CreateJobTypeZ) => {
+export const createJobService = async (
+  data: CreateJobTypeZ,
+  companyId: number,
+) => {
   const newJob = await prisma.job.create({
     data: {
-      companyId: data.companyId,
+      companyId: companyId,
       title: data.title,
       description: data.description,
       expiresAt: new Date(data.expiresAt),
@@ -53,11 +56,12 @@ export const createJobService = async (data: CreateJobTypeZ) => {
 export const updateJobByIdService = async (
   id: number,
   data: UpdateJobTypeZ,
+  companyId: number,
 ) => {
   const updatedJob = await prisma.job.update({
     where: { id: id },
     data: {
-      companyId: data.companyId,
+      companyId: companyId,
       title: data.title,
       description: data.description,
       expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
