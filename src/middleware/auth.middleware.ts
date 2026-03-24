@@ -38,7 +38,7 @@ export const protect = async (
   }
 };
 
-type UserRole = "jobseeker" | "admin" | "companyrecruiter";
+type UserRole = "JOB_SEEKER" | "ADMIN" | "COMPANY_RECRUITER";
 
 export const restrictTo = (...roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction) => {

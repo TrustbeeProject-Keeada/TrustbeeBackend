@@ -11,7 +11,7 @@ import {
   createJobValidation,
   updateJobValidation,
 } from "../models/jobs.model.js";
-import { restrictTo } from "../middleware/auth.middleware.js";
+import { protect, restrictTo } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
@@ -19,7 +19,8 @@ router.get("/", getAllJobs);
 router.get("/:id", getJobById);
 router.post(
   "/",
-  restrictTo("companyrecruiter"),
+  protect,
+  restrictTo("COMPANY_RECRUITER"),
   validate(createJobValidation),
   createJob,
 );
