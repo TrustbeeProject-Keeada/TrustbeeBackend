@@ -10,16 +10,16 @@ export const sendMessageService = async (
   const messageData: any = { content: data.content };
 
   // 2. Vem skickar?
-  if (senderRole === "jobseeker") {
+  if (senderRole === "JOB_SEEKER") {
     messageData.senderJobSeekerId = senderId;
-  } else if (senderRole === "companyrecruiter") {
+  } else if (senderRole === "COMPANY_RECRUITER") {
     messageData.senderRecruiterId = senderId;
   }
 
   // 3. Vem tar emot?
-  if (data.receiverRole === "jobseeker") {
+  if (data.receiverRole === "JOB_SEEKER") {
     messageData.receiverJobSeekerId = data.receiverId;
-  } else if (data.receiverRole === "companyrecruiter") {
+  } else if (data.receiverRole === "COMPANY_RECRUITER") {
     messageData.receiverRecruiterId = data.receiverId;
   }
 
@@ -37,8 +37,8 @@ export const getConversationService = async (
   otherId: number,
   otherRole: string,
 ) => {
-  const userIsJobSeeker = userRole === "jobseeker";
-  const otherIsJobSeeker = otherRole === "jobseeker";
+  const userIsJobSeeker = userRole === "JOB_SEEKER";
+  const otherIsJobSeeker = otherRole === "JOB_SEEKER";
 
   const userSenderField = userIsJobSeeker
     ? "senderJobSeekerId"

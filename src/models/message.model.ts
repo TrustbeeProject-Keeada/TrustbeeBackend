@@ -7,7 +7,7 @@ export const sendMessageValidation = z.object({
       .number({ message: "Receiver ID is required" }) // Ändrat till 'message'
       .int()
       .positive(),
-    receiverRole: z.enum(["jobseeker", "companyrecruiter"], {
+    receiverRole: z.enum(["JOB_SEEKER", "COMPANY_RECRUITER"], {
       message: "Receiver role must be 'jobseeker' or 'companyrecruiter'", // Ändrat till 'message'
     }),
   }),
