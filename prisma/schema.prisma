@@ -26,6 +26,14 @@ enum JobStatus {
   ARCHIVED
 }
 
+// Ny enum för ansökningsstatus
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
 model JobSeeker {
   id Int @id @default(autoincrement())
 
@@ -53,6 +61,11 @@ model JobSeeker {
   accountCompletionRate Int        @default(0)
   sentMessages          Messages[] @relation("JobSeekerSentMessages")
   receivedMessages      Messages[] @relation("JobSeekerReceivedMessages")
+
+  // --- NYA RELATIONER FÖR TRUSTBEE ---
+  applications   Application[]
+  savedJobs      SavedJob[]
+  savedCompanies SavedCompany[]
 }
 
 // ? login is password and email
@@ -71,6 +84,9 @@ model CompanyRecruiter {
   jobs               Job[]
   sentMessages       Messages[] @relation("RecruiterSentMessages")
   receivedMessages   Messages[] @relation("RecruiterReceivedMessages")
+
+  // --- NYA RELATIONER FÖR TRUSTBEE ---
+  savedBySeekers SavedCompany[]
 }
 
 model Job {
@@ -83,6 +99,15 @@ model Job {
   expiresAt   DateTime
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+
+  // --- NYA FÄLT FÖR FILTRERING ---
+  city     String?
+  country  String?
+  category String? // t.ex. "IT", "Healthcare"
+
+  // --- NYA RELATIONER FÖR TRUSTBEE ---
+  applications Application[]
+  savedBy      SavedJob[]
 }
 
 model Messages {
@@ -103,4 +128,52 @@ model Messages {
   receiverRecruiter   CompanyRecruiter? @relation("RecruiterReceivedMessages", fields: [receiverRecruiterId], references: [id])
 
   createdAt DateTime @default(now())
+}
+
+// ==========================================
+// NYA MODELLER FÖR APPLIKATIONEN
+// ==========================================
+
+// Hanterar när en arbetssökande ansöker till ett jobb
+model Application {
+  id        Int               @id @default(autoincrement())
+  status    ApplicationStatus @default(PENDING)
+  appliedAt DateTime          @default(now())
+
+  jobSeekerId Int
+  jobId       Int
+
+  jobSeeker JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  // En användare kan bara ansöka till samma jobb en gång
+  @@unique([jobSeekerId, jobId])
+}
+
+// Hanterar när en arbetssökande bokmärker ett jobb
+model SavedJob {
+  id      Int      @id @default(autoincrement())
+  savedAt DateTime @default(now())
+
+  jobSeekerId Int
+  jobId       Int
+
+  jobSeeker JobSeeker @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobSeekerId, jobId])
+}
+
+// Hanterar när en arbetssökande bokmärker ett företag (Company Profile)
+model SavedCompany {
+  id      Int      @id @default(autoincrement())
+  savedAt DateTime @default(now())
+
+  jobSeekerId Int
+  companyId   Int
+
+  jobSeeker JobSeeker        @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  company   CompanyRecruiter @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([jobSeekerId, companyId])
 }
