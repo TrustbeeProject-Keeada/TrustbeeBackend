@@ -15,6 +15,8 @@ export const createApp = () => {
   // job seeker routes
   app.use("/api/jobseekers", jobSeekerRoutes);
   app.use("/api/companyrecruiter", companyRecruiterRoutes);
+
+  // message routes
   app.use("/api/messages", messageRoutes);
   app.use("/api/applications", applicationRoutes);
 
