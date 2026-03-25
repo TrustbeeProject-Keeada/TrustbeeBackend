@@ -56,6 +56,12 @@ export const updateJobSeekerById = async (
     const idInt = Number(id);
     const updateData = req.body;
     // Implementation for updating job seeker goes here
+
+    if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
+      return res.status(403).json({
+        message: "Forbidden: You can only update your own profile",
+      });
+    }
     const updateJobSeeker = await updateJobSeekerByIdService(idInt, updateData);
 
     if (!updateJobSeeker) {
@@ -82,6 +88,12 @@ export const deleteJobSeekerById = async (
     const id = req.params.id as string;
     const idInt = Number(id);
     const jobseeker = await deleteJobSeekerByIdService(idInt);
+
+    if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
+      return res.status(403).json({
+        message: "Forbidden: You can only update your own profile",
+      });
+    }
 
     if (!jobseeker) {
       return res

@@ -4,6 +4,7 @@ import authRoutes from "./routes/auth.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import jobRoutes from "./routes/job.routes.js";
 import companyRecruiterRoutes from "./routes/companyrecruiter.routes.js";
+import messageRoutes from "./routes/message.routes.js";
 import "./ai_implementation/ai_instance.js";
 import { api_health } from "./ai_implementation/ai_instance.js";
 
@@ -15,10 +16,11 @@ export const createApp = () => {
   // job seeker routes
   app.use("/api/jobseekers", jobSeekerRoutes);
   app.use("/api/companyrecruiter", companyRecruiterRoutes);
-  // app.use("/api/companyrecruiter", )
+  app.use("/api/messages", messageRoutes);
 
   // job routes
   app.use("/api/jobs", jobRoutes);
+
   // auth routes
   app.use("/api/auth", authRoutes);
 

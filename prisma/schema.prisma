@@ -39,13 +39,15 @@ model JobSeeker {
 
   role Role @default(JOB_SEEKER)
 
-  phoneNumber    String?
-  profilePicture String?
-  city           String?
-  languages      String[]
-  skills         String[]
-  bio            String?
-  portfolioLink  String?
+  phoneNumber       String?
+  profilePicture    String?
+  city              String?
+  languages         String[]
+  skills            String[]
+  bio               String?
+  portfolioLink     String?
+  CV                String?
+  PersonalStatement String?
 
   // ! Extra 
   accountCompletionRate Int        @default(0)
@@ -87,18 +89,18 @@ model Messages {
   id      Int    @id @default(autoincrement())
   content String
 
-  // * Avsändare vem skickade?
-  senderJobSeeker   JobSeeker @relation("JobSeekerSentMessages", fields: [senderJobSeekerId], references: [id])
-  senderJobSeekerId Int
+  // * Gjorda frivilliga (?) 
+  senderJobSeekerId Int?
+  senderJobSeeker   JobSeeker? @relation("JobSeekerSentMessages", fields: [senderJobSeekerId], references: [id])
 
-  senderRecruiterId Int
-  senderRecruiter   CompanyRecruiter @relation("RecruiterSentMessages", fields: [senderRecruiterId], references: [id], onDelete: Cascade)
+  senderRecruiterId Int?
+  senderRecruiter   CompanyRecruiter? @relation("RecruiterSentMessages", fields: [senderRecruiterId], references: [id], onDelete: Cascade)
 
-  receiverJobSeeker   JobSeeker @relation("JobSeekerReceivedMessages", fields: [receiverJobSeekerId], references: [id])
-  receiverJobSeekerId Int
+  receiverJobSeekerId Int?
+  receiverJobSeeker   JobSeeker? @relation("JobSeekerReceivedMessages", fields: [receiverJobSeekerId], references: [id])
 
-  receiverRecruiter   CompanyRecruiter @relation("RecruiterReceivedMessages", fields: [receiverRecruiterId], references: [id])
-  receiverRecruiterId Int
+  receiverRecruiterId Int?
+  receiverRecruiter   CompanyRecruiter? @relation("RecruiterReceivedMessages", fields: [receiverRecruiterId], references: [id])
 
   createdAt DateTime @default(now())
 }

@@ -9,6 +9,7 @@ import {
   LoginCompanyRecruiterTypeZ,
   RegisterCompanyRecruiterTypeZ,
 } from "../models/companyrecruiter.model.js";
+import jwt, { SignOptions } from "jsonwebtoken";
 
 export const registerJobSeekerService = async (
   data: RegisterJobSeekerTypeZ,
@@ -54,7 +55,28 @@ export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
     throw new AppError("Invalid email or password", 401);
   }
 
-  return jobSeeker;
+  // add jwt token generation here
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new AppError("JWT_SECRET not set", 500);
+  }
+
+  const expiresIn = (process.env.JWT_EXPIRES_IN ??
+    "1d") as SignOptions["expiresIn"];
+
+  const token = jwt.sign(
+    {
+      id: jobSeeker.id,
+      email: jobSeeker.email,
+      role: jobSeeker.role,
+    },
+    jwtSecret,
+    {
+      expiresIn,
+    },
+  );
+
+  return { ...jobSeeker, token };
 };
 
 export const registerCompanyRecruiterService = async (
@@ -104,5 +126,26 @@ export const logInCompanyRecruiterService = async (
     throw new AppError("Invalid email or password", 401);
   }
 
-  return companyRecruiter;
+  // add jwt token generation here
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new AppError("JWT_SECRET not set", 500);
+  }
+
+  const expiresIn = (process.env.JWT_EXPIRES_IN ??
+    "1d") as SignOptions["expiresIn"];
+
+  const token = jwt.sign(
+    {
+      id: companyRecruiter.id,
+      email: companyRecruiter.email,
+      role: companyRecruiter.role,
+    },
+    jwtSecret,
+    {
+      expiresIn,
+    },
+  );
+
+  return { ...companyRecruiter, token };
 };
