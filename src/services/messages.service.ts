@@ -7,7 +7,13 @@ export const sendMessageService = async (
   data: SendMessageTypeZ,
 ) => {
   // 1. Bygg objektet dynamiskt
-  const messageData: any = { content: data.content };
+  const messageData: {
+    content: string;
+    senderJobSeekerId?: number;
+    senderRecruiterId?: number;
+    receiverJobSeekerId?: number;
+    receiverRecruiterId?: number;
+  } = { content: data.content };
 
   // 2. Vem skickar?
   if (senderRole === "JOB_SEEKER") {
