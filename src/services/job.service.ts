@@ -9,6 +9,7 @@ export const getAllJobsService = async () => {
       title: true,
       description: true,
       company: true,
+      status: true,
     },
   });
 
@@ -98,4 +99,28 @@ export const deleteJobByIdService = async (
     throw new AppError(`Job with id ${jobId} not found`, 404);
   }
   return deletedJob;
+};
+
+export const changeJobStatusService = async (
+  jobId: number,
+  companyId: number,
+  status: "ACTIVE" | "ARCHIVED",
+) => {
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+  });
+
+  if (!job) {
+    throw new AppError(`Job with id ${jobId} not found`, 404);
+  }
+
+  if (job.companyId !== companyId) {
+    throw new AppError(`Forbidden: You are not the owner of job ${jobId}`, 403);
+  }
+
+  const updatedJob = await prisma.job.update({
+    where: { id: jobId },
+    data: { status: status },
+  });
+  return updatedJob;
 };

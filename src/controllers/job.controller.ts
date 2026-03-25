@@ -5,6 +5,7 @@ import {
   createJobService,
   updateJobByIdService,
   deleteJobByIdService,
+  changeJobStatusService,
 } from "../services/job.service.js";
 
 export const getAllJobs = async (
@@ -93,6 +94,32 @@ export const deleteJobById = async (
     res
       .status(200)
       .json({ status: `Job with id ${id} deleted successfully`, deleteJob });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changeJobStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const id = req.params.id as string;
+    const idInt = Number(id);
+    const { status } = req.body;
+    const user = req.user; // Access the user object set by the auth middleware
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const updatedJob = await changeJobStatusService(idInt, user.id, status);
+    res.status(200).json({
+      status: "success",
+      message: "Job status updated successfully",
+      data: updatedJob,
+    });
   } catch (error) {
     next(error);
   }

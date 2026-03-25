@@ -5,9 +5,11 @@ import {
   createJob,
   updateJobById,
   deleteJobById,
+  changeJobStatus,
 } from "../controllers/job.controller.js";
 import { validate } from "../middleware/validate.middleware.js";
 import {
+  changeJobStatusValidation,
   createJobValidation,
   updateJobValidation,
 } from "../models/jobs.model.js";
@@ -36,6 +38,13 @@ router.delete(
   protect,
   restrictTo("COMPANY_RECRUITER", "ADMIN"),
   deleteJobById,
+);
+router.patch(
+  "/:id/status",
+  protect,
+  restrictTo("COMPANY_RECRUITER", "ADMIN"),
+  validate(changeJobStatusValidation),
+  changeJobStatus,
 );
 
 export default router;

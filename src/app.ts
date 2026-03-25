@@ -18,6 +18,7 @@ export const createApp = () => {
 
   // job routes
   app.use("/api/jobs", jobRoutes);
+
   // auth routes
   app.use("/api/auth", authRoutes);
 
