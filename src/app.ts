@@ -4,6 +4,8 @@ import authRoutes from "./routes/auth.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import jobRoutes from "./routes/job.routes.js";
 import companyRecruiterRoutes from "./routes/companyrecruiter.routes.js";
+import "./ai_implementation/ai_instance.js";
+import { api_health } from "./ai_implementation/ai_instance.js";
 
 export const createApp = () => {
   const app = express();
@@ -25,7 +27,7 @@ export const createApp = () => {
   app.get("/health", (req: Request, res: Response) => {
     res
       .status(200)
-      .json({ status: "ok✅", timestamp: new Date().toISOString() });
+      .json({ status: "ok✅", timestamp: new Date().toISOString(), ai: api_health() });
   });
   return app;
 };
