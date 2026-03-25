@@ -5,6 +5,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 import jobRoutes from "./routes/job.routes.js";
 import companyRecruiterRoutes from "./routes/companyrecruiter.routes.js";
 import messageRoutes from "./routes/message.routes.js";
+import applicationRoutes from "./routes/application.routes.js";
 
 export const createApp = () => {
   const app = express();
@@ -15,6 +16,7 @@ export const createApp = () => {
   app.use("/api/jobseekers", jobSeekerRoutes);
   app.use("/api/companyrecruiter", companyRecruiterRoutes);
   app.use("/api/messages", messageRoutes);
+  app.use("/api/applications", applicationRoutes);
 
   // job routes
   app.use("/api/jobs", jobRoutes);
