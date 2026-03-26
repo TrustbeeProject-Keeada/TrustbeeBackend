@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import {
   sendMessageService,
   getConversationService,
+  getAllReceivedMessagesService,
 } from "../services/messages.service.js";
 import { AppError } from "../utils/app.error.js";
 
@@ -64,6 +65,31 @@ export const getConversation = async (
       otherId,
       otherRole,
     );
+
+    res.status(200).json({
+      status: "success",
+      results: messages.length,
+      data: { messages },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllConversationsList = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const myId = req.user?.id;
+    const myRole = req.user?.role;
+
+    if (!myId || !myRole) {
+      return next(new AppError("Unauthorized", 401));
+    }
+
+    const messages = await getAllReceivedMessagesService(myId, myRole);
 
     res.status(200).json({
       status: "success",
