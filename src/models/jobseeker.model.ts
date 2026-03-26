@@ -7,6 +7,10 @@ export const registerJobSeekerValidation = z.object({
       lastname: z.string("Please enter a valid last name").min(2),
       email: z.email("Please enter a valid email"),
       password: z.string("Please enter a valid password").min(8),
+      cv: z.string("Please enter a valid CV").optional(),
+      personalStatement: z
+        .string("Please enter a valid personal statement")
+        .optional(),
     })
     .strict(),
 });
@@ -27,6 +31,10 @@ export const updateJobSeekerValidation = z.object({
       lastname: z.string("Please enter a valid last name").min(2).optional(),
       email: z.email("Please enter a valid email").optional(),
       password: z.string("Please enter a valid password").min(8).optional(),
+      cv: z.string("Please enter a valid CV").optional(),
+      personalStatement: z
+        .string("Please enter a valid personal statement")
+        .optional(),
     })
     .strict(),
 });
