@@ -9,6 +9,7 @@ import messageRoutes from "./routes/message.routes.js";
 import "./ai_implementation/ai_instance.js";
 import { api_health } from "./ai_implementation/ai_instance.js";
 import applicationRoutes from "./routes/application.routes.js";
+import supportRoutes from "./routes/support.routes.js";
 
 export const createApp = () => {
   const app = express();
@@ -29,19 +30,20 @@ export const createApp = () => {
   // auth routes
   app.use("/api/auth", authRoutes);
 
+  // support routes
+  app.use("/api", supportRoutes);
+
   // AI routes
   app.use("/api/ai", aiRoutes);
 
   app.use(errorHandler);
 
   app.get("/health", (req: Request, res: Response) => {
-    res
-      .status(200)
-      .json({
-        status: "ok✅",
-        timestamp: new Date().toISOString(),
-        ai: api_health(),
-      });
+    res.status(200).json({
+      status: "ok✅",
+      timestamp: new Date().toISOString(),
+      ai: api_health(),
+    });
   });
   return app;
 };
