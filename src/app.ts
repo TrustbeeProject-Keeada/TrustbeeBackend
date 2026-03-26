@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from "express";
 import jobSeekerRoutes from "./routes/jobseeker.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import jobRoutes from "./routes/job.routes.js";
 import companyRecruiterRoutes from "./routes/companyrecruiter.routes.js";
@@ -24,12 +25,19 @@ export const createApp = () => {
   // auth routes
   app.use("/api/auth", authRoutes);
 
+  // AI routes
+  app.use("/api/ai", aiRoutes);
+
   app.use(errorHandler);
 
   app.get("/health", (req: Request, res: Response) => {
     res
       .status(200)
-      .json({ status: "ok✅", timestamp: new Date().toISOString(), ai: api_health() });
+      .json({
+        status: "ok✅",
+        timestamp: new Date().toISOString(),
+        ai: api_health(),
+      });
   });
   return app;
 };

@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { api_health } from "../ai_implementation/ai_instance.js";
 
 import {
   LogInJobSeeker,
@@ -42,13 +41,6 @@ router.post(
   LogInCompanyRecruiter,
 );
 
-router.get(
-  "/api_health",
-  async (req, res) => {
-    const health = await api_health();
-    res.json({ status: "ok✅", timestamp: new Date().toISOString(), ai: health });
-  }
-);
 
 
 export default router;
