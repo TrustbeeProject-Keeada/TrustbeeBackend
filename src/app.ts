@@ -8,6 +8,7 @@ import companyRecruiterRoutes from "./routes/companyrecruiter.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import "./ai_implementation/ai_instance.js";
 import { api_health } from "./ai_implementation/ai_instance.js";
+import applicationRoutes from "./routes/application.routes.js";
 
 export const createApp = () => {
   const app = express();
@@ -17,7 +18,10 @@ export const createApp = () => {
   // job seeker routes
   app.use("/api/jobseekers", jobSeekerRoutes);
   app.use("/api/companyrecruiter", companyRecruiterRoutes);
+
+  // message routes
   app.use("/api/messages", messageRoutes);
+  app.use("/api/applications", applicationRoutes);
 
   // job routes
   app.use("/api/jobs", jobRoutes);

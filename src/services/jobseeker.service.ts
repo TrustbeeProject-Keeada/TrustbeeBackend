@@ -34,9 +34,18 @@ export const updateJobSeekerByIdService = async (
   jobseekerId: number,
   data: UpdateJobSeekerTypeZ,
 ) => {
+  const existingJobSeeker = await prisma.jobSeeker.findUnique({
+    where: { id: jobseekerId },
+  });
+
+  if (!existingJobSeeker) {
+    throw new AppError(`Job seeker with id ${jobseekerId} not found`, 404);
+  }
+
   const hashedPassword = data.password
     ? await bcrypt.hash(data.password, 12)
     : undefined;
+
   const updatedJobSeeker = await prisma.jobSeeker.update({
     where: { id: jobseekerId },
     data: {
@@ -46,9 +55,6 @@ export const updateJobSeekerByIdService = async (
       password: hashedPassword,
     },
   });
-  if (!updatedJobSeeker) {
-    throw new AppError(`Job seeker with id ${jobseekerId} not found`, 404);
-  }
   return updatedJobSeeker;
 };
 

@@ -1,5 +1,7 @@
 import { prisma } from "../config/db.js";
+import { Prisma } from "../generated/prisma/browser.js";
 import { SendMessageTypeZ } from "../models/message.model.js";
+import { AppError } from "../utils/app.error.js";
 
 export const sendMessageService = async (
   senderId: number,
@@ -7,23 +9,26 @@ export const sendMessageService = async (
   data: SendMessageTypeZ,
 ) => {
   // 1. Bygg objektet dynamiskt
-  const messageData: any = { content: data.content };
+  const messageData: Prisma.MessagesUncheckedCreateInput = {
+    content: data.content,
+  };
 
-  // 2. Vem skickar?
   if (senderRole === "JOB_SEEKER") {
     messageData.senderJobSeekerId = senderId;
   } else if (senderRole === "COMPANY_RECRUITER") {
     messageData.senderRecruiterId = senderId;
+  } else {
+    throw new AppError("Invalid sender role", 400);
   }
 
-  // 3. Vem tar emot?
   if (data.receiverRole === "JOB_SEEKER") {
     messageData.receiverJobSeekerId = data.receiverId;
   } else if (data.receiverRole === "COMPANY_RECRUITER") {
     messageData.receiverRecruiterId = data.receiverId;
+  } else {
+    throw new AppError("Invalid receiver role", 400);
   }
 
-  // 4. Spara i databasen
   const newMessage = await prisma.messages.create({
     data: messageData,
   });
@@ -32,38 +37,37 @@ export const sendMessageService = async (
 };
 
 export const getConversationService = async (
-  userId: number,
-  userRole: string,
+  myId: number,
+  myRole: string,
   otherId: number,
   otherRole: string,
 ) => {
-  const userIsJobSeeker = userRole === "JOB_SEEKER";
-  const otherIsJobSeeker = otherRole === "JOB_SEEKER";
+  const mySenderColumn =
+    myRole === "JOB_SEEKER" ? "senderJobSeekerId" : "senderRecruiterId";
+  const myReceiverColumn =
+    myRole === "JOB_SEEKER" ? "receiverJobSeekerId" : "receiverRecruiterId";
 
-  const userSenderField = userIsJobSeeker
-    ? "senderJobSeekerId"
-    : "senderRecruiterId";
-  const userReceiverField = userIsJobSeeker
-    ? "receiverJobSeekerId"
-    : "receiverRecruiterId";
+  const otherSenderColumn =
+    otherRole === "JOB_SEEKER" ? "senderJobSeekerId" : "senderRecruiterId";
+  const otherReceiverColumn =
+    otherRole === "JOB_SEEKER" ? "receiverJobSeekerId" : "receiverRecruiterId";
 
-  const otherSenderField = otherIsJobSeeker
-    ? "senderJobSeekerId"
-    : "senderRecruiterId";
-  const otherReceiverField = otherIsJobSeeker
-    ? "receiverJobSeekerId"
-    : "receiverRecruiterId";
-
-  // Hämta hela konversationen (både skickat och mottaget mellan dessa två)
   const messages = await prisma.messages.findMany({
     where: {
       OR: [
-        { [userSenderField]: userId, [otherReceiverField]: otherId }, // Jag skickade till dem
-        { [otherSenderField]: otherId, [userReceiverField]: userId }, // De skickade till mig
+        {
+          [mySenderColumn]: myId,
+          [otherReceiverColumn]: otherId,
+        },
+        {
+          [otherSenderColumn]: otherId,
+          [myReceiverColumn]: myId,
+        },
       ],
     },
-    orderBy: { createdAt: "asc" }, // Sortera från äldst till nyast
+    orderBy: {
+      createdAt: "asc",
+    },
   });
-
   return messages;
 };

@@ -52,26 +52,22 @@ export const updateJobSeekerById = async (
   next: NextFunction,
 ) => {
   try {
-    const id = req.params.id as string;
-    const idInt = Number(id);
+    const rawId = req.params.id;
+    const idString = Array.isArray(rawId) ? rawId[0] : String(rawId);
+    const idInt = parseInt(idString, 10);
+
     const updateData = req.body;
-    // Implementation for updating job seeker goes here
 
     if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
       return res.status(403).json({
         message: "Forbidden: You can only update your own profile",
       });
     }
+
     const updateJobSeeker = await updateJobSeekerByIdService(idInt, updateData);
 
-    if (!updateJobSeeker) {
-      return res
-        .status(404)
-        .json({ status: `Job seeker with id ${id} not found` });
-    }
-
     res.status(200).json({
-      status: `Job seeker with id ${id} updated successfully`,
+      status: `Job seeker with id ${idInt} updated successfully`,
       jobseeker: updateJobSeeker,
     });
   } catch (error) {

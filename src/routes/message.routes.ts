@@ -2,20 +2,26 @@ import { Router } from "express";
 import {
   sendMessage,
   getConversation,
-} from "../controllers/message.controller.js";
-import { protect } from "../middleware/auth.middleware.js";
+} from "../controllers/messages.controller.js";
+import { protect, restrictTo } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { sendMessageValidation } from "../models/message.model.js";
 
 const router = Router();
 
-// Du måste vara inloggad för att använda DM
-router.use(protect);
+router.post(
+  "/",
+  protect,
+  restrictTo("JOB_SEEKER", "COMPANY_RECRUITER"),
+  validate(sendMessageValidation),
+  sendMessage,
+);
 
-// POST /api/messages - Skicka ett meddelande
-router.post("/", validate(sendMessageValidation), sendMessage);
-
-// GET /api/messages/:otherId/:otherRole - Hämta chatthistorik
-router.get("/:otherId/:otherRole", getConversation);
+router.get(
+  "/:otherId",
+  protect,
+  restrictTo("JOB_SEEKER", "COMPANY_RECRUITER"),
+  getConversation,
+);
 
 export default router;
