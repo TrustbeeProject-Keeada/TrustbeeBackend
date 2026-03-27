@@ -9,6 +9,8 @@ import messageRoutes from "./routes/message.routes.js";
 import "./ai_implementation/ai_instance.js";
 import { api_health } from "./ai_implementation/ai_instance.js";
 import applicationRoutes from "./routes/application.routes.js";
+import supportRoutes from "./routes/support.routes.js";
+import savedRoutes from "./routes/saved.routes.js";
 
 export const createApp = () => {
   const app = express();
@@ -26,8 +28,14 @@ export const createApp = () => {
   // job routes
   app.use("/api/jobs", jobRoutes);
 
+  // saved routes
+  app.use("/api/saved", savedRoutes);
+
   // auth routes
   app.use("/api/auth", authRoutes);
+
+  // support routes
+  app.use("/api", supportRoutes);
 
   // AI routes
   app.use("/api/ai", aiRoutes);

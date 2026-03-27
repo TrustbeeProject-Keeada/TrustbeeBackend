@@ -1,9 +1,50 @@
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { CreateJobTypeZ, UpdateJobTypeZ } from "../models/jobs.model.js";
+import { Prisma } from "../generated/prisma/browser.js";
 
-export const getAllJobsService = async () => {
+export const getAllJobsService = async (queryFilters?: {
+  search?: string;
+  status?: "ACTIVE" | "ARCHIVED";
+  companyId?: number;
+  city?: string;
+  country?: string;
+  category?: string;
+}) => {
+  const whereClause: Prisma.JobWhereInput = {};
+
+  if (queryFilters?.search) {
+    whereClause.OR = [
+      { title: { contains: queryFilters.search, mode: "insensitive" } },
+      { description: { contains: queryFilters.search, mode: "insensitive" } },
+    ];
+  }
+
+  if (queryFilters?.status) {
+    whereClause.status = queryFilters.status;
+  }
+
+  if (queryFilters?.companyId) {
+    whereClause.companyId = queryFilters.companyId;
+  }
+
+  if (queryFilters?.city) {
+    whereClause.city = { equals: queryFilters.city, mode: "insensitive" };
+  }
+
+  if (queryFilters?.country) {
+    whereClause.country = { equals: queryFilters.country, mode: "insensitive" };
+  }
+
+  if (queryFilters?.category) {
+    whereClause.category = {
+      equals: queryFilters.category,
+      mode: "insensitive",
+    };
+  }
+
   const jobs = await prisma.job.findMany({
+    where: whereClause,
     select: {
       id: true,
       title: true,
@@ -13,7 +54,7 @@ export const getAllJobsService = async () => {
     },
   });
 
-  if (!jobs) {
+  if (jobs.length === 0) {
     throw new AppError("No jobs found", 404);
   }
 

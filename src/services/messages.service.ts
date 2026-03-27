@@ -8,7 +8,6 @@ export const sendMessageService = async (
   senderRole: string,
   data: SendMessageTypeZ,
 ) => {
-  // 1. Bygg objektet dynamiskt
   const messageData: Prisma.MessagesUncheckedCreateInput = {
     content: data.content,
   };
@@ -69,5 +68,41 @@ export const getConversationService = async (
       createdAt: "asc",
     },
   });
+  return messages;
+};
+
+export const getAllReceivedMessagesService = async (
+  myId: number,
+  myRole: string,
+) => {
+  const receiverColumn =
+    myRole === "JOB_SEEKER" ? "receiverJobSeekerId" : "receiverRecruiterId";
+
+  const messages = await prisma.messages.findMany({
+    where: {
+      [receiverColumn]: myId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      senderRecruiter: {
+        select: {
+          id: true,
+          companyName: true,
+          logoUrl: true,
+        },
+      },
+      senderJobSeeker: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          profilePicture: true,
+        },
+      },
+    },
+  });
+
   return messages;
 };

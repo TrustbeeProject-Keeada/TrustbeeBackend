@@ -125,7 +125,8 @@ export async function job_matching_evaluation() {
         role: "user",
         parts: [
           {
-            text: systemInstruction + "\n\n" + user_cv + "\n\n" + job_description,
+            text:
+              systemInstruction + "\n\n" + user_cv + "\n\n" + job_description,
           },
         ],
       },
