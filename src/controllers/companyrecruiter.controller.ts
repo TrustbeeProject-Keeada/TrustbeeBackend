@@ -20,15 +20,19 @@ export const GetCompanyRecruiters = async (
     const country = req.query.country as string | undefined;
     const industry = req.query.industry as string | undefined;
 
-    const companyRecruiters = await GetAllCompanyRecruitersService({
-      search,
-      city,
-      country,
-      industry,
-    });
-    if (companyRecruiters.length === 0) {
-      return res.status(404).json({ status: "No company recruiters found" });
-    }
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+    const companyRecruiters = await GetAllCompanyRecruitersService(
+      {
+        search,
+        city,
+        country,
+        industry,
+      },
+      { page, limit },
+    );
+
     res.status(200).json({
       status: "success",
       data: companyRecruiters,
