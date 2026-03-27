@@ -3,7 +3,6 @@ import {
   deleteJobSeekerById,
   getJobSeekerById,
   getJobSeekers,
-  getMyJobSeekerDashboard,
   updateJobSeekerById,
   getJobSeekerDashboard,
 } from "../controllers/jobseeker.controller.js";
@@ -14,12 +13,7 @@ import { protect, restrictTo } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.get("/", getJobSeekers);
-router.get(
-  "/me/dashboard",
-  protect,
-  restrictTo("JOB_SEEKER", "ADMIN"),
-  getMyJobSeekerDashboard,
-);
+
 router.get(
   "/:id/dashboard",
   protect,

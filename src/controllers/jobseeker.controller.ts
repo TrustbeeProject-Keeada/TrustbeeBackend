@@ -139,24 +139,3 @@ export const getJobSeekerDashboard = async (
     next(error);
   }
 };
-
-export const getMyJobSeekerDashboard = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    if (!req.user?.id) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const dashboard = await getJobSeekerDashboardService(req.user.id);
-
-    res.status(200).json({
-      status: "Dashboard data retrieved successfully",
-      data: dashboard,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
