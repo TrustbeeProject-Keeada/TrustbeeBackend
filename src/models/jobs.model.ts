@@ -3,9 +3,9 @@ import { z } from "zod";
 export const createJobValidation = z.object({
   body: z
     .object({
-      title: z.string("Please enter a valid job title").min(2),
-      description: z.string("Please enter a valid job description").min(10),
-      expiresAt: z.string("Please enter a valid expiration date").min(10),
+      title: z.string().min(2, "Please enter a valid job title"),
+      description: z.string().min(10, "Please enter a valid job description"),
+      expiresAt: z.string().min(10, "Please enter a valid expiration date"),
     })
     .strict(),
 });
@@ -13,7 +13,7 @@ export const createJobValidation = z.object({
 export const updateJobValidation = z.object({
   body: z
     .object({
-      title: z.string("Please enter a valid job title").min(2).optional(),
+      title: z.string().min(2).optional(),
       description: z
         .string("Please enter a valid job description")
         .min(10)

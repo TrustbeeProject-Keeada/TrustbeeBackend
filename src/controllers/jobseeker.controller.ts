@@ -84,19 +84,14 @@ export const deleteJobSeekerById = async (
   try {
     const id = req.params.id as string;
     const idInt = Number(id);
-    const jobseeker = await deleteJobSeekerByIdService(idInt);
 
     if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
       return res.status(403).json({
-        message: "Forbidden: You can only update your own profile",
+        message: "Forbidden: You can only delete your own profile",
       });
     }
 
-    if (!jobseeker) {
-      return res
-        .status(404)
-        .json({ status: `Job seeker with id ${id} not found` });
-    }
+    const jobseeker = await deleteJobSeekerByIdService(idInt);
 
     res.status(200).json({
       status: `Job seeker with id ${id} deleted successfully`,

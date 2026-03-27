@@ -59,12 +59,18 @@ export const updateJobSeekerByIdService = async (
 };
 
 export const deleteJobSeekerByIdService = async (jobseekerId: number) => {
+  const existingJobSeeker = await prisma.jobSeeker.findUnique({
+    where: { id: jobseekerId },
+  });
+
+  if (!existingJobSeeker) {
+    throw new AppError(`Job seeker with id ${jobseekerId} not found`, 404);
+  }
+
   const deletedJobSeeker = await prisma.jobSeeker.delete({
     where: { id: jobseekerId },
   });
-  if (!deletedJobSeeker) {
-    throw new AppError(`Job seeker with id ${jobseekerId} not found`, 404);
-  }
+
   return deletedJobSeeker;
 };
 
