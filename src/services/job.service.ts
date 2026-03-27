@@ -3,14 +3,20 @@ import { AppError } from "../utils/app.error.js";
 import { CreateJobTypeZ, UpdateJobTypeZ } from "../models/jobs.model.js";
 import { Prisma } from "../generated/prisma/index.js";
 
-export const getAllJobsService = async (queryFilters?: {
-  search?: string;
-  status?: "ACTIVE" | "ARCHIVED";
-  companyId?: number;
-  city?: string;
-  country?: string;
-  category?: string;
-}) => {
+export const getAllJobsService = async (
+  queryFilters?: {
+    search?: string;
+    status?: "ACTIVE" | "ARCHIVED";
+    companyId?: number;
+    city?: string;
+    country?: string;
+    category?: string;
+  },
+  pagination?: {
+    page: number;
+    limit: number;
+  },
+) => {
   const whereClause: Prisma.JobWhereInput = {};
 
   if (queryFilters?.search) {
@@ -43,8 +49,14 @@ export const getAllJobsService = async (queryFilters?: {
     };
   }
 
+  const page = pagination?.page || 1;
+  const limit = pagination?.limit || 10;
+  const skip = (page - 1) * limit;
+
   const jobs = await prisma.job.findMany({
     where: whereClause,
+    skip: skip,
+    take: limit,
     select: {
       id: true,
       title: true,
@@ -52,13 +64,25 @@ export const getAllJobsService = async (queryFilters?: {
       company: true,
       status: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   if (jobs.length === 0) {
     throw new AppError("No jobs found", 404);
   }
 
-  return jobs;
+  const totalJobs = await prisma.job.count({ where: whereClause });
+
+  return {
+    jobs,
+    meta: {
+      totalJobs,
+      currentPage: page,
+      totalPages: Math.ceil(totalJobs / limit),
+    },
+  };
 };
 
 export const getJobByIdService = async (jobId: number) => {
