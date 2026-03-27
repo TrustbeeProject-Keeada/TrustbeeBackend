@@ -15,11 +15,24 @@ export const GetCompanyRecruiters = async (
   next: NextFunction,
 ) => {
   try {
-    const companyRecruiters = await GetAllCompanyRecruitersService();
-    if (!companyRecruiters) {
+    const search = req.query.search as string | undefined;
+    const city = req.query.city as string | undefined;
+    const country = req.query.country as string | undefined;
+    const industry = req.query.industry as string | undefined;
+
+    const companyRecruiters = await GetAllCompanyRecruitersService({
+      search,
+      city,
+      country,
+      industry,
+    });
+    if (companyRecruiters.length === 0) {
       return res.status(404).json({ status: "No company recruiters found" });
     }
-    res.status(200).json(companyRecruiters);
+    res.status(200).json({
+      status: "success",
+      data: companyRecruiters,
+    });
   } catch (error) {
     next(error);
   }
@@ -40,7 +53,10 @@ export const GetCompanyRecruitersById = async (
         .status(404)
         .json({ status: `Company recruiter with id ${id} not found` });
     }
-    res.status(200).json(companyRecruiter);
+    res.status(200).json({
+      status: "success",
+      data: companyRecruiter,
+    });
   } catch (error) {
     next(error);
   }
@@ -72,7 +88,10 @@ export const UpdateCompanyRecruiterById = async (
         .json({ status: `Company recruiter with id ${id} not found` });
     }
 
-    res.status(200).json(updatedCompanyRecruiter);
+    res.status(200).json({
+      status: "success",
+      data: updatedCompanyRecruiter,
+    });
   } catch (error) {
     next(error);
   }
@@ -100,7 +119,10 @@ export const DeleteCompanyRecruiterById = async (
         .status(404)
         .json({ status: `Company recruiter with id ${id} not found` });
     }
-    res.status(200).json(deletedCompanyRecruiter);
+    res.status(200).json({
+      status: "success",
+      data: deletedCompanyRecruiter,
+    });
   } catch (error) {
     next(error);
   }

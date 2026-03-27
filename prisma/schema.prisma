@@ -85,6 +85,10 @@ model CompanyRecruiter {
   sentMessages       Messages[] @relation("RecruiterSentMessages")
   receivedMessages   Messages[] @relation("RecruiterReceivedMessages")
 
+  city     String?
+  country  String?
+  industry String? // t.ex. "IT", "Healthcare"
+
   // --- NYA RELATIONER FÖR TRUSTBEE ---
   savedBySeekers SavedCompany[]
 }

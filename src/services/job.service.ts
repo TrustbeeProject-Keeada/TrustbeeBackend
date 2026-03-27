@@ -1,7 +1,7 @@
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { CreateJobTypeZ, UpdateJobTypeZ } from "../models/jobs.model.js";
-import { Prisma } from "../generated/prisma/browser.js";
+import { Prisma } from "../generated/prisma/index.js";
 
 export const getAllJobsService = async (queryFilters?: {
   search?: string;

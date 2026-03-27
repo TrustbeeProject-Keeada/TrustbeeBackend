@@ -2,15 +2,55 @@ import bcrypt from "bcrypt";
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { UpdateCompanyRecruiterTypeZ } from "../models/companyrecruiter.model.js";
+import { Prisma } from "../generated/prisma/index.js";
 
 // ? Get all company recruiters.
-export const GetAllCompanyRecruitersService = async () => {
+export const GetAllCompanyRecruitersService = async (queryFilters?: {
+  search?: string;
+  city?: string;
+  country?: string;
+  industry?: string;
+}) => {
+  const whereClause: Prisma.CompanyRecruiterWhereInput = {};
+  if (queryFilters?.search) {
+    whereClause.OR = [
+      { companyName: { contains: queryFilters.search, mode: "insensitive" } },
+      { description: { contains: queryFilters.search, mode: "insensitive" } },
+    ];
+  }
+  if (queryFilters?.city) {
+    whereClause.city = {
+      equals: queryFilters.city as string,
+      mode: "insensitive",
+    };
+  }
+  if (queryFilters?.country) {
+    whereClause.country = {
+      equals: queryFilters.country as string,
+      mode: "insensitive",
+    };
+  }
+  if (queryFilters?.industry) {
+    whereClause.industry = {
+      equals: queryFilters.industry as string,
+      mode: "insensitive",
+    };
+  }
   const companyRecruiters = await prisma.companyRecruiter.findMany({
+    where: whereClause,
     select: {
       id: true,
       companyName: true,
       email: true,
-      phoneNumber: true,
+      description: true,
+      country: true,
+      city: true,
+      industry: true,
+      logoUrl: true,
+      // You could even include how many active jobs they have!
+      _count: {
+        select: { jobs: { where: { status: "ACTIVE" } } },
+      },
     },
   });
   if (!companyRecruiters) {
