@@ -1,5 +1,5 @@
 import { prisma } from "../config/db.js";
-import { Prisma } from "../generated/prisma/browser.js";
+import { Prisma } from "../generated/prisma/index.js";
 import { SendMessageTypeZ } from "../models/message.model.js";
 import { AppError } from "../utils/app.error.js";
 
