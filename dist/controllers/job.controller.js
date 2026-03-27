@@ -1,0 +1,89 @@
+import { getAllJobsService, getJobByIdService, createJobService, updateJobByIdService, deleteJobByIdService, changeJobStatusService, } from "../services/job.service.js";
+export const getAllJobs = async (req, res, next) => {
+    try {
+        const jobs = await getAllJobsService();
+        res.status(200).json(jobs);
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const getJobById = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const idInt = Number(id);
+        const job = await getJobByIdService(idInt);
+        res.status(200).json(job);
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const createJob = async (req, res, next) => {
+    try {
+        const data = req.body;
+        const user = req.user; // Access the user object set by the auth middleware
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        const newJob = await createJobService(data, user.id);
+        res.status(201).json(newJob);
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const updateJobById = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const idInt = Number(id);
+        const data = req.body;
+        const user = req.user; // Access the user object set by the auth middleware
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        const updatedJob = await updateJobByIdService(idInt, data, user.id);
+        res.status(200).json({ status: "success", data: updatedJob });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const deleteJobById = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const idInt = Number(id);
+        const user = req.user; // Access the user object set by the auth middleware
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        // Implementation for deleting job goes here
+        const deleteJob = await deleteJobByIdService(idInt, user.id);
+        res
+            .status(200)
+            .json({ status: `Job with id ${id} deleted successfully`, deleteJob });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const changeJobStatus = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const idInt = Number(id);
+        const { status } = req.body;
+        const user = req.user; // Access the user object set by the auth middleware
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        const updatedJob = await changeJobStatusService(idInt, user.id, status);
+        res.status(200).json({
+            status: "success",
+            message: "Job status updated successfully",
+            data: updatedJob,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};

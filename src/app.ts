@@ -34,14 +34,22 @@ export const createApp = () => {
 
   app.use(errorHandler);
 
-  app.get("/health", (req: Request, res: Response) => {
-    res
-      .status(200)
-      .json({
-        status: "ok✅",
-        timestamp: new Date().toISOString(),
-        ai: api_health(),
-      });
+  app.get("/health", async (req: Request, res: Response) => {
+    let aiStatus: unknown = "disabled";
+
+    if (process.env.gemini_api_key) {
+      try {
+        aiStatus = await api_health();
+      } catch (error) {
+        aiStatus = "unavailable";
+      }
+    }
+
+    res.status(200).json({
+      status: "ok✅",
+      timestamp: new Date().toISOString(),
+      ai: aiStatus,
+    });
   });
   return app;
 };
