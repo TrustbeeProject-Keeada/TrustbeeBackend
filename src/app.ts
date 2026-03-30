@@ -30,7 +30,7 @@ export const createApp = () => {
   app.use("/api/auth", authRoutes);
 
   // AI routes
-  app.use("/api/ai", aiRoutes);
+  app.use("/api/", aiRoutes);
 
   app.use(errorHandler);
 

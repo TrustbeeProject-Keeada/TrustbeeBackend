@@ -54,8 +54,8 @@ model JobSeeker {
   skills            String[]
   bio               String?
   portfolioLink     String?
-  CV                String?
-  PersonalStatement String?
+  cv                String?
+  personalStatement String?
 
   // ! Extra 
   accountCompletionRate Int        @default(0)

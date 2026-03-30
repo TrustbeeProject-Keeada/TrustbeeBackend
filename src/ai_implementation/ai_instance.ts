@@ -21,24 +21,27 @@ export async function evaluateJobMatch(
   jobDescription: string,
   candidateProfile: string,
 ) {
-  const prompt = `
-Job Description:
+  const prompt = `${systemInstruction}
+
+---EVALUATION REQUEST---
+
+JOB DESCRIPTION:
 ${jobDescription}
 
-Candidate Profile:
+CANDIDATE PROFILE:
 ${candidateProfile}
 
-Please evaluate how well this candidate matches this job.
+TASK: Evaluate the job-to-candidate match and respond ONLY with the JSON structure specified above.
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash-lite",
     contents: [
       {
         role: "user",
         parts: [
           {
-            text: systemInstruction + "\n\n" + prompt,
+            text: prompt,
           },
         ],
       },
@@ -114,18 +117,26 @@ export async function api_health() {
   return response.text;
 }
 
-export async function job_matching_evaluation() {
-  const data = await getJobMatchingData(1, 1);
+export async function job_matching_evaluation(userId: number, jobAdId: number) {
+  const data = await getJobMatchingData(userId, jobAdId);
   const user_cv = `cv: ${data.jobSeeker.cv}`;
   const job_description = `job description: ${data.job.description}`;
+  const prompt = `${systemInstruction}
+
+${user_cv}
+
+${job_description}
+
+Please evaluate how well this candidate matches this job.`;
+
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash-lite",
     contents: [
       {
         role: "user",
         parts: [
           {
-            text: systemInstruction + "\n\n" + user_cv + "\n\n" + job_description,
+            text: prompt,
           },
         ],
       },
