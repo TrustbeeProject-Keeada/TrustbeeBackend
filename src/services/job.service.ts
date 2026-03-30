@@ -92,8 +92,6 @@ export const getJobByIdService = async (jobId: number) => {
       id: true,
       title: true,
       description: true,
-<<<<<<< HEAD
-=======
       company: {
         select: {
           id: true,
@@ -104,7 +102,6 @@ export const getJobByIdService = async (jobId: number) => {
           logoUrl: true,
         },
       },
->>>>>>> 6b0f54b5cdfe0e29364d94e27449fc482f089511
     },
   });
   if (!job) {
