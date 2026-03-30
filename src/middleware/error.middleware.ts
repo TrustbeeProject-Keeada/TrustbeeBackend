@@ -9,6 +9,8 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   void req;
   void next;
 
+  console.error("ErrorHandler caught error:", err);
+
   let statusCode = 500;
   let message = "Server Error";
   let details: unknown;

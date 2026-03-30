@@ -189,3 +189,66 @@ export const changeJobStatusService = async (
   });
   return updatedJob;
 };
+
+export const getJobBankService = async (
+  queryFilters?: {
+    status?: string;
+  },
+  pagination?: {
+    page: number;
+    limit: number;
+  },
+  searchFilters?: {
+    search?: string;
+  },
+) => {
+  const page = pagination?.page || 1;
+  const limit = pagination?.limit || 10;
+  const offset = (page - 1) * limit;
+
+  // Build the job bank API URL with pagination and optional filters
+  let url = `https://jobsearch.api.jobtechdev.se/search?offset=${offset}&limit=${limit}&q=${encodeURIComponent(searchFilters?.search || "")}`;
+  if (queryFilters?.status) {
+    // The external API may or may not support a `status` param; append it so callers can request it.
+    url += `&status=${encodeURIComponent(queryFilters.status)}`;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new AppError(
+        `Failed to fetch job bank data: ${response.statusText}`,
+        response.status,
+      );
+    }
+
+    const data = await response.json();
+
+    const mappedJobs = Array.isArray(data.hits)
+      ? data.hits.map((hit: any) => ({
+          id: hit.id,
+          title: hit.headline,
+          company: hit.employer?.name || hit.employer?.workplace || "Unknown",
+          url: hit.webpage_url,
+          applicationDeadline: hit.application_deadline,
+          location:
+            hit.workplace_address?.city || hit.workplace_address?.region || "",
+          employmentType: hit.employment_type?.label || null,
+          salaryType: hit.salary_type?.label || null,
+          occupation: hit.occupation?.label || null,
+          removed: hit.removed,
+        }))
+      : [];
+
+    return {
+      total: data.total,
+      positions: data.positions,
+      query_time_in_millis: data.query_time_in_millis,
+      result_time_in_millis: data.result_time_in_millis,
+      hits: mappedJobs,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new AppError(`Error fetching job bank data: ${message}`, 500);
+  }
+};
