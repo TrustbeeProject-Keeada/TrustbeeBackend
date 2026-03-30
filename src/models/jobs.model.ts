@@ -6,6 +6,7 @@ export const createJobValidation = z.object({
       title: z.string().min(2, "Please enter a valid job title"),
       description: z.string().min(10, "Please enter a valid job description"),
       expiresAt: z.string().min(10, "Please enter a valid expiration date"),
+      webpage_url: z.url("Please enter a valid URL").optional(),
     })
     .strict(),
 });
@@ -15,12 +16,12 @@ export const updateJobValidation = z.object({
     .object({
       title: z.string().min(2).optional(),
       description: z
-        .string("Please enter a valid job description")
-        .min(10)
+        .string()
+        .min(10, "Please enter a valid job description")
         .optional(),
       expiresAt: z
-        .string("Please enter a valid expiration date")
-        .min(10)
+        .string()
+        .min(10, "Please enter a valid expiration date")
         .optional(),
     })
     .strict(),

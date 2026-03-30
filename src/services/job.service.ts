@@ -61,8 +61,17 @@ export const getAllJobsService = async (
       id: true,
       title: true,
       description: true,
-      company: true,
       status: true,
+      company: {
+        select: {
+          id: true,
+          companyName: true,
+          email: true,
+          description: true,
+          country: true,
+          logoUrl: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -92,7 +101,17 @@ export const getJobByIdService = async (jobId: number) => {
       id: true,
       title: true,
       description: true,
-      company: true,
+      webpage_url: true,
+      company: {
+        select: {
+          id: true,
+          companyName: true,
+          email: true,
+          description: true,
+          country: true,
+          logoUrl: true,
+        },
+      },
     },
   });
   if (!job) {
@@ -111,6 +130,7 @@ export const createJobService = async (
       title: data.title,
       description: data.description,
       expiresAt: new Date(data.expiresAt),
+      webpage_url: data.webpage_url,
     },
   });
   if (!newJob) {
@@ -178,7 +198,6 @@ export const changeJobStatusService = async (
   if (!job) {
     throw new AppError(`Job with id ${jobId} not found`, 404);
   }
-
   if (job.companyId !== companyId) {
     throw new AppError(`Forbidden: You are not the owner of job ${jobId}`, 403);
   }

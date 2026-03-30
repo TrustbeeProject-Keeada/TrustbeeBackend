@@ -113,15 +113,16 @@ export const DeleteCompanyRecruiterById = async (
 
     if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
       return res.status(403).json({
-        message: "Forbidden: You can only update your own profile",
+        message: "Forbidden: You can only delete your own profile",
       });
     }
     const deletedCompanyRecruiter =
       await DeleteCompanyRecruiterByIdService(idInt);
+
     if (!deletedCompanyRecruiter) {
       return res
         .status(404)
-        .json({ status: `Company recruiter with id ${id} not found` });
+        .json({ message: `Company recruiter with id ${id} not found` });
     }
     res.status(200).json({
       status: "success",

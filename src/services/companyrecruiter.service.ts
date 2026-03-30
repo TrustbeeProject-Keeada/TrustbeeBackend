@@ -3,7 +3,6 @@ import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { UpdateCompanyRecruiterTypeZ } from "../models/companyrecruiter.model.js";
 import { Prisma } from "../generated/prisma/index.js";
-import { meta } from "zod/v4/core";
 
 // ? Get all company recruiters.
 export const GetAllCompanyRecruitersService = async (
@@ -102,6 +101,7 @@ export const UpdateCompanyRecruiterByIdService = async (
   const hashedPassword = data.password
     ? await bcrypt.hash(data.password, 12)
     : undefined;
+
   const updatedCompanyRecruiter = await prisma.companyRecruiter.update({
     where: { id: id },
     data: {
@@ -121,11 +121,17 @@ export const UpdateCompanyRecruiterByIdService = async (
 
 // ? Delete company recruiter by id.
 export const DeleteCompanyRecruiterByIdService = async (id: number) => {
-  const deletedCompanyRecruiter = await prisma.companyRecruiter.delete({
+  const existingRecruiter = await prisma.companyRecruiter.findUnique({
     where: { id: id },
   });
-  if (!deletedCompanyRecruiter) {
-    throw new AppError(`Company recruiter with id ${id} not found`, 404);
+
+  if (!existingRecruiter) {
+    return null;
   }
-  return deletedCompanyRecruiter;
+
+  const deletedRecruiter = await prisma.companyRecruiter.delete({
+    where: { id: id },
+  });
+
+  return deletedRecruiter;
 };

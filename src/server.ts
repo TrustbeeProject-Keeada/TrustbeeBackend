@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { createApp } from "./app.js";
+import { startCronJobs } from "./utils/cronJobs.js";
 
 dotenv.config();
 
@@ -10,6 +11,8 @@ const startServer = async () => {
     console.info("DB CONNECTED");
 
     const app = createApp();
+
+    startCronJobs();
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
