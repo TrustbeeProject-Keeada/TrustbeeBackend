@@ -61,6 +61,7 @@ export const getAllJobsService = async (
       id: true,
       title: true,
       description: true,
+      webpage_url: true,
       status: true,
       company: {
         select: {
