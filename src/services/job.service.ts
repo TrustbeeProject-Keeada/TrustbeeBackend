@@ -92,6 +92,7 @@ export const getJobByIdService = async (jobId: number) => {
       id: true,
       title: true,
       description: true,
+      webpage_url: true,
       company: {
         select: {
           id: true,
@@ -120,6 +121,7 @@ export const createJobService = async (
       title: data.title,
       description: data.description,
       expiresAt: new Date(data.expiresAt),
+      webpage_url: data.webpage_url,
     },
   });
   if (!newJob) {

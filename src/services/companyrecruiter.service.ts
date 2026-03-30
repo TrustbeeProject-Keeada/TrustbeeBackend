@@ -102,6 +102,7 @@ export const UpdateCompanyRecruiterByIdService = async (
   const hashedPassword = data.password
     ? await bcrypt.hash(data.password, 12)
     : undefined;
+
   const updatedCompanyRecruiter = await prisma.companyRecruiter.update({
     where: { id: id },
     data: {
