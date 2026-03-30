@@ -226,6 +226,22 @@ export const cleanUpOldArchivedJobsService = async () => {
   return result;
 };
 
+export const archiveExpiredJobsService = async () => {
+  const rightNow = new Date();
+  const updatedJobs = await prisma.job.updateMany({
+    where: {
+      expiresAt: {
+        lt: rightNow, // This means we want to update jobs that have an expiresAt date that is less than the current date, which means they are expired
+      },
+      status: "ACTIVE", // We only want to archive jobs that are currently active, we don't want to archive jobs that are already archived
+    },
+    data: {
+      status: "ARCHIVED",
+    },
+  });
+  return updatedJobs;
+};
+
 export const getJobBankService = async (
   queryFilters?: {
     status?: string;

@@ -16,7 +16,7 @@ export const getAllJobs = async (
 ) => {
   try {
     const search = req.query.search as string | undefined;
-    const status = req.query.status as "ACTIVE" | "ARCHIVED" | undefined;
+    const status = (req.query.status as "ACTIVE" | "ARCHIVED") || "ACTIVE";
     const companyId = req.query.companyId
       ? Number(req.query.companyId)
       : undefined;
