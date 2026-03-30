@@ -61,7 +61,7 @@ export const getAllJobsService = async (
       id: true,
       title: true,
       description: true,
-      company: true,
+      company: false,
       status: true,
     },
     orderBy: {
@@ -92,7 +92,6 @@ export const getJobByIdService = async (jobId: number) => {
       id: true,
       title: true,
       description: true,
-      company: true,
     },
   });
   if (!job) {
