@@ -121,11 +121,17 @@ export const UpdateCompanyRecruiterByIdService = async (
 
 // ? Delete company recruiter by id.
 export const DeleteCompanyRecruiterByIdService = async (id: number) => {
-  const deletedCompanyRecruiter = await prisma.companyRecruiter.delete({
+  const existingRecruiter = await prisma.companyRecruiter.findUnique({
     where: { id: id },
   });
-  if (!deletedCompanyRecruiter) {
-    throw new AppError(`Company recruiter with id ${id} not found`, 404);
+
+  if (!existingRecruiter) {
+    return null;
   }
-  return deletedCompanyRecruiter;
+
+  const deletedRecruiter = await prisma.companyRecruiter.delete({
+    where: { id: id },
+  });
+
+  return deletedRecruiter;
 };
