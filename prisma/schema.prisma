@@ -4,7 +4,7 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -84,6 +84,10 @@ model CompanyRecruiter {
   jobs               Job[]
   sentMessages       Messages[] @relation("RecruiterSentMessages")
   receivedMessages   Messages[] @relation("RecruiterReceivedMessages")
+
+  city     String?
+  country  String?
+  industry String? // t.ex. "IT", "Healthcare"
 
   // --- NYA RELATIONER FÖR TRUSTBEE ---
   savedBySeekers SavedCompany[]

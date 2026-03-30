@@ -136,7 +136,7 @@ Please evaluate how well this candidate matches this job.`;
         role: "user",
         parts: [
           {
-            text: prompt,
+            text: systemInstruction + "\n\n" + user_cv + "\n\n" + job_description,
           },
         ],
       },

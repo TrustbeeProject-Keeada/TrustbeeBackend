@@ -9,6 +9,8 @@ import messageRoutes from "./routes/message.routes.js";
 import "./ai_implementation/ai_instance.js";
 import { api_health } from "./ai_implementation/ai_instance.js";
 import applicationRoutes from "./routes/application.routes.js";
+import supportRoutes from "./routes/support.routes.js";
+import savedRoutes from "./routes/saved.routes.js";
 
 export const createApp = () => {
   const app = express();
@@ -26,22 +28,36 @@ export const createApp = () => {
   // job routes
   app.use("/api/jobs", jobRoutes);
 
+  // saved routes
+  app.use("/api/saved", savedRoutes);
+
   // auth routes
   app.use("/api/auth", authRoutes);
+
+  // support routes
+  app.use("/api", supportRoutes);
 
   // AI routes
   app.use("/api/", aiRoutes);
 
   app.use(errorHandler);
 
-  app.get("/health", (req: Request, res: Response) => {
-    res
-      .status(200)
-      .json({
-        status: "ok✅",
-        timestamp: new Date().toISOString(),
-        ai: api_health(),
-      });
+  app.get("/health", async (req: Request, res: Response) => {
+    let aiStatus: unknown = "disabled";
+
+    if (process.env.gemini_api_key) {
+      try {
+        aiStatus = await api_health();
+      } catch (error) {
+        aiStatus = "unavailable";
+      }
+    }
+
+    res.status(200).json({
+      status: "ok✅",
+      timestamp: new Date().toISOString(),
+      ai: aiStatus,
+    });
   });
   return app;
 };

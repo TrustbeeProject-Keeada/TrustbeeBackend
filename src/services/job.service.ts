@@ -1,9 +1,62 @@
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { CreateJobTypeZ, UpdateJobTypeZ } from "../models/jobs.model.js";
+import { Prisma } from "../generated/prisma/index.js";
 
-export const getAllJobsService = async () => {
+export const getAllJobsService = async (
+  queryFilters?: {
+    search?: string;
+    status?: "ACTIVE" | "ARCHIVED";
+    companyId?: number;
+    city?: string;
+    country?: string;
+    category?: string;
+  },
+  pagination?: {
+    page: number;
+    limit: number;
+  },
+) => {
+  const whereClause: Prisma.JobWhereInput = {};
+
+  if (queryFilters?.search) {
+    whereClause.OR = [
+      { title: { contains: queryFilters.search, mode: "insensitive" } },
+      { description: { contains: queryFilters.search, mode: "insensitive" } },
+    ];
+  }
+
+  if (queryFilters?.status) {
+    whereClause.status = queryFilters.status;
+  }
+
+  if (queryFilters?.companyId) {
+    whereClause.companyId = queryFilters.companyId;
+  }
+
+  if (queryFilters?.city) {
+    whereClause.city = { equals: queryFilters.city, mode: "insensitive" };
+  }
+
+  if (queryFilters?.country) {
+    whereClause.country = { equals: queryFilters.country, mode: "insensitive" };
+  }
+
+  if (queryFilters?.category) {
+    whereClause.category = {
+      equals: queryFilters.category,
+      mode: "insensitive",
+    };
+  }
+
+  const page = pagination?.page || 1;
+  const limit = pagination?.limit || 10;
+  const skip = (page - 1) * limit;
+
   const jobs = await prisma.job.findMany({
+    where: whereClause,
+    skip: skip,
+    take: limit,
     select: {
       id: true,
       title: true,
@@ -11,13 +64,25 @@ export const getAllJobsService = async () => {
       company: true,
       status: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
-  if (!jobs) {
+  if (jobs.length === 0) {
     throw new AppError("No jobs found", 404);
   }
 
-  return jobs;
+  const totalJobs = await prisma.job.count({ where: whereClause });
+
+  return {
+    jobs,
+    meta: {
+      totalJobs,
+      currentPage: page,
+      totalPages: Math.ceil(totalJobs / limit),
+    },
+  };
 };
 
 export const getJobByIdService = async (jobId: number) => {

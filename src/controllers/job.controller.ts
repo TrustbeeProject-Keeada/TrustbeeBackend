@@ -14,7 +14,32 @@ export const getAllJobs = async (
   next: NextFunction,
 ) => {
   try {
-    const jobs = await getAllJobsService();
+    const search = req.query.search as string | undefined;
+    const status = req.query.status as "ACTIVE" | "ARCHIVED" | undefined;
+    const companyId = req.query.companyId
+      ? Number(req.query.companyId)
+      : undefined;
+    const city = req.query.city as string | undefined;
+    const country = req.query.country as string | undefined;
+    const category = req.query.category as string | undefined;
+
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+    const jobs = await getAllJobsService(
+      {
+        search,
+        status,
+        companyId,
+        city,
+        country,
+        category,
+      },
+      {
+        page,
+        limit,
+      },
+    );
     res.status(200).json(jobs);
   } catch (error) {
     next(error);

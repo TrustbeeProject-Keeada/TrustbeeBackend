@@ -4,6 +4,7 @@ import {
   getAllJobSeekersService,
   getJobSeekerByIdService,
   updateJobSeekerByIdService,
+  getJobSeekerDashboardService,
 } from "../services/jobseeker.service.js";
 
 export const getJobSeekers = async (
@@ -83,23 +84,51 @@ export const deleteJobSeekerById = async (
   try {
     const id = req.params.id as string;
     const idInt = Number(id);
-    const jobseeker = await deleteJobSeekerByIdService(idInt);
 
     if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
       return res.status(403).json({
-        message: "Forbidden: You can only update your own profile",
+        message: "Forbidden: You can only delete your own profile",
       });
     }
 
-    if (!jobseeker) {
-      return res
-        .status(404)
-        .json({ status: `Job seeker with id ${id} not found` });
-    }
+    const jobseeker = await deleteJobSeekerByIdService(idInt);
 
     res.status(200).json({
       status: `Job seeker with id ${id} deleted successfully`,
       jobseeker,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getJobSeekerDashboard = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const id = req.params.id as string;
+    const idInt = Number(id);
+
+    if (!Number.isInteger(idInt) || idInt <= 0) {
+      return res.status(400).json({
+        message: "Invalid job seeker id",
+      });
+    }
+
+    // Check if user is accessing their own dashboard or is admin
+    if (req.user?.id !== idInt && req.user?.role !== "ADMIN") {
+      return res.status(403).json({
+        message: "Forbidden: You can only access your own dashboard",
+      });
+    }
+
+    const dashboard = await getJobSeekerDashboardService(idInt);
+
+    res.status(200).json({
+      status: "Dashboard data retrieved successfully",
+      data: dashboard,
     });
   } catch (error) {
     next(error);
