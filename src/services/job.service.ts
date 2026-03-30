@@ -92,6 +92,19 @@ export const getJobByIdService = async (jobId: number) => {
       id: true,
       title: true,
       description: true,
+<<<<<<< HEAD
+=======
+      company: {
+        select: {
+          id: true,
+          companyName: true,
+          email: true,
+          description: true,
+          country: true,
+          logoUrl: true,
+        },
+      },
+>>>>>>> 6b0f54b5cdfe0e29364d94e27449fc482f089511
     },
   });
   if (!job) {
@@ -187,4 +200,19 @@ export const changeJobStatusService = async (
     data: { status: status },
   });
   return updatedJob;
+};
+
+export const cleanUpOldArchivedJobsService = async () => {
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3); // This works by subtracting 3 months from the current date, so it will give us the date that is 3 months ago from now
+
+  const result = await prisma.job.deleteMany({
+    where: {
+      status: "ARCHIVED",
+      updatedAt: {
+        lt: threeMonthsAgo, // lt = less than, this means we want to delete jobs that were updated before the date that is 3 months ago from now
+      },
+    },
+  });
+  return result;
 };
