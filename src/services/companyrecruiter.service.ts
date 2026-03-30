@@ -3,7 +3,6 @@ import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { UpdateCompanyRecruiterTypeZ } from "../models/companyrecruiter.model.js";
 import { Prisma } from "../generated/prisma/index.js";
-import { meta } from "zod/v4/core";
 
 // ? Get all company recruiters.
 export const GetAllCompanyRecruitersService = async (
