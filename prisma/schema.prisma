@@ -101,6 +101,7 @@ model Job {
   description String
   status      JobStatus        @default(ACTIVE)
   expiresAt   DateTime
+  webpage_url String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
