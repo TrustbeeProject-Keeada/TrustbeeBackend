@@ -6,6 +6,7 @@ import {
   updateJobById,
   deleteJobById,
   changeJobStatus,
+  getJobBank,
 } from "../controllers/job.controller.js";
 import { validate } from "../middleware/validate.middleware.js";
 import {
@@ -18,6 +19,7 @@ import { protect, restrictTo } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.get("/", getAllJobs);
+router.get("/job_bank", getJobBank);
 router.get("/:id", getJobById);
 router.post(
   "/",
@@ -26,6 +28,7 @@ router.post(
   restrictTo("COMPANY_RECRUITER", "ADMIN"),
   createJob,
 );
+
 router.patch(
   "/:id",
   validate(updateJobValidation),
