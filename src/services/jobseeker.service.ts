@@ -13,7 +13,7 @@ export const getAllJobSeekersService = async () => {
     },
   });
 
-  if (jobseekers.length === 0) {
+  if (!jobseekers) {
     throw new AppError("No job seekers found", 404);
   }
 

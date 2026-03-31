@@ -23,6 +23,11 @@ export const getAllJobsService = async (
     whereClause.OR = [
       { title: { contains: queryFilters.search, mode: "insensitive" } },
       { description: { contains: queryFilters.search, mode: "insensitive" } },
+      {
+        company: {
+          companyName: { contains: queryFilters.search, mode: "insensitive" },
+        },
+      },
     ];
   }
 
@@ -61,15 +66,28 @@ export const getAllJobsService = async (
       id: true,
       title: true,
       description: true,
-      company: false,
+      webpage_url: true,
+      country: true,
+      city: true,
+      category: true,
       status: true,
+      company: {
+        select: {
+          id: true,
+          companyName: true,
+          email: true,
+          description: true,
+          country: true,
+          logoUrl: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  if (jobs.length === 0) {
+  if (!jobs) {
     throw new AppError("No jobs found", 404);
   }
 
@@ -93,6 +111,10 @@ export const getJobByIdService = async (jobId: number) => {
       title: true,
       description: true,
       webpage_url: true,
+      country: true,
+      city: true,
+      category: true,
+      status: true,
       company: {
         select: {
           id: true,
@@ -199,6 +221,38 @@ export const changeJobStatusService = async (
     data: { status: status },
   });
   return updatedJob;
+};
+
+export const cleanUpOldArchivedJobsService = async () => {
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3); // This works by subtracting 3 months from the current date, so it will give us the date that is 3 months ago from now
+  // const oneMinuteAgo = new Date();
+  // oneMinuteAgo.setMinutes(oneMinuteAgo.getMinutes() - 1); // This is for testing purposes, it will delete jobs that were updated more than 1 minute ago
+  const result = await prisma.job.deleteMany({
+    where: {
+      status: "ARCHIVED",
+      updatedAt: {
+        lt: threeMonthsAgo, // lt = less than, this means we want to delete jobs that were updated before the date that is 3 months ago from now
+      },
+    },
+  });
+  return result;
+};
+
+export const archiveExpiredJobsService = async () => {
+  const rightNow = new Date();
+  const updatedJobs = await prisma.job.updateMany({
+    where: {
+      expiresAt: {
+        lt: rightNow, // This means we want to update jobs that have an expiresAt date that is less than the current date, which means they are expired
+      },
+      status: "ACTIVE", // We only want to archive jobs that are currently active, we don't want to archive jobs that are already archived
+    },
+    data: {
+      status: "ARCHIVED",
+    },
+  });
+  return updatedJobs;
 };
 
 export const getJobBankService = async (
