@@ -27,6 +27,15 @@ export const getJobSeekerByIdService = async (id: number) => {
   if (!jobseeker) {
     throw new AppError(`Job seeker with id ${id} not found`, 404);
   }
+
+  let cvBase64: string | null = null;
+  if (jobseeker.cv) {
+    cvBase64 = jobseeker.cv.toString("base64");
+  }
+
+// Om du ska skicka den till en webbläsare för att visa en PDF:
+const dataUrl = `data:application/pdf;base64,${cvBase64}`;
+
   return jobseeker;
 };
 
