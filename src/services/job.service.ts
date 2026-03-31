@@ -87,7 +87,7 @@ export const getAllJobsService = async (
     },
   });
 
-  if (!jobs) {
+  if (jobs.length === 0) {
     throw new AppError("No jobs found", 404);
   }
 
@@ -207,6 +207,7 @@ export const changeJobStatusService = async (
   if (!job) {
     throw new AppError(`Job with id ${jobId} not found`, 404);
   }
+
   if (job.companyId !== companyId) {
     throw new AppError(`Forbidden: You are not the owner of job ${jobId}`, 403);
   }
@@ -250,7 +251,7 @@ export const archiveExpiredJobsService = async () => {
   return updatedJobs;
 };
 
-export const getJobBankService = async (
+export const getJobBankService
   queryFilters?: {
     status?: string;
   },
