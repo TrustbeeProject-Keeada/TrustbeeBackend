@@ -9,10 +9,7 @@ import {
   getSavedCompaniesService,
 } from "../services/saved.services.js";
 
-// ==========================================
 // JOBB
-// ==========================================
-
 export const saveJob = async (
   req: Request,
   res: Response,
