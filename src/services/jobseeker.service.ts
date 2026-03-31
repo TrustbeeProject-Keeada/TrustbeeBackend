@@ -94,6 +94,15 @@ export const getJobSeekerByIdService = async (id: number) => {
   if (!jobseeker) {
     throw new AppError(`Job seeker with id ${id} not found`, 404);
   }
+
+  let cvBase64: string | null = null;
+  if (jobseeker.cv) {
+    cvBase64 = jobseeker.cv.toString("base64");
+  }
+
+// Om du ska skicka den till en webbläsare för att visa en PDF:
+const dataUrl = `data:application/pdf;base64,${cvBase64}`;
+
   return jobseeker;
 };
 
@@ -101,6 +110,10 @@ export const updateJobSeekerByIdService = async (
   jobseekerId: number,
   data: UpdateJobSeekerTypeZ,
 ) => {
+  const cvBuffer = data.cv
+    ? Buffer.from(data.cv.split(",")[1] || data.cv, "base64")
+    : undefined;
+
   const existingJobSeeker = await prisma.jobSeeker.findUnique({
     where: { id: jobseekerId },
   });
@@ -120,6 +133,8 @@ export const updateJobSeekerByIdService = async (
       lastName: data.lastname,
       email: data.email,
       password: hashedPassword,
+      cv: cvBuffer,
+      personalStatement: data.personalStatement,
     },
   });
   return updatedJobSeeker;
