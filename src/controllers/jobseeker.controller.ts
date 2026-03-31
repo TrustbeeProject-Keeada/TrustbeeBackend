@@ -13,13 +13,32 @@ export const getJobSeekers = async (
   next: NextFunction,
 ) => {
   try {
-    const jobseekers = await getAllJobSeekersService();
+    const search = req.query.search as string | undefined;
+    const city = req.query.city as string | undefined;
+    const skills = req.query.skills as string | undefined;
+
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+    const jobseekers = await getAllJobSeekersService(
+      {
+        search,
+        city,
+        skills,
+      },
+      {
+        page,
+        limit,
+      },
+    );
 
     if (!jobseekers) {
       return res.status(404).json({ status: "No job seekers found" });
     }
 
-    res.status(200).json(jobseekers);
+    res
+      .status(200)
+      .json({ status: "Job seekers retrieved successfully", data: jobseekers });
   } catch (error) {
     next(error);
   }
@@ -41,7 +60,9 @@ export const getJobSeekerById = async (
         .json({ status: `Job seeker with id ${id} not found` });
     }
 
-    res.status(200).json(jobseeker);
+    res
+      .status(200)
+      .json({ status: "Job seeker retrieved successfully", data: jobseeker });
   } catch (error) {
     next(error);
   }
@@ -69,7 +90,7 @@ export const updateJobSeekerById = async (
 
     res.status(200).json({
       status: `Job seeker with id ${idInt} updated successfully`,
-      jobseeker: updateJobSeeker,
+      data: updateJobSeeker,
     });
   } catch (error) {
     next(error);
@@ -95,7 +116,7 @@ export const deleteJobSeekerById = async (
 
     res.status(200).json({
       status: `Job seeker with id ${id} deleted successfully`,
-      jobseeker,
+      data: jobseeker,
     });
   } catch (error) {
     next(error);
