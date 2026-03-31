@@ -13,7 +13,7 @@ export const getAllJobSeekersService = async () => {
     },
   });
 
-  if (!jobseekers) {
+  if (jobseekers.length === 0) {
     throw new AppError("No job seekers found", 404);
   }
 
@@ -29,14 +29,13 @@ export const getJobSeekerByIdService = async (id: number) => {
   }
 
   let cvBase64: string | null = null;
+
   if (jobseeker.cv) {
-    cvBase64 = jobseeker.cv.toString("base64");
+    const base64Content = Buffer.from(jobseeker.cv).toString("base64");
+
+    cvBase64 = `data:application/pdf;base64,${base64Content}`;
   }
-
-// Om du ska skicka den till en webbläsare för att visa en PDF:
-const dataUrl = `data:application/pdf;base64,${cvBase64}`;
-
-  return jobseeker;
+  return { ...jobseeker, cv: cvBase64 };
 };
 
 export const updateJobSeekerByIdService = async (
