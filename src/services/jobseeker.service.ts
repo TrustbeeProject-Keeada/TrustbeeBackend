@@ -34,6 +34,10 @@ export const updateJobSeekerByIdService = async (
   jobseekerId: number,
   data: UpdateJobSeekerTypeZ,
 ) => {
+  const cvBuffer = data.cv
+    ? Buffer.from(data.cv.split(",")[1] || data.cv, "base64")
+    : undefined;
+
   const existingJobSeeker = await prisma.jobSeeker.findUnique({
     where: { id: jobseekerId },
   });
@@ -53,6 +57,8 @@ export const updateJobSeekerByIdService = async (
       lastName: data.lastname,
       email: data.email,
       password: hashedPassword,
+      cv: cvBuffer,
+      personalStatement: data.personalStatement,
     },
   });
   return updatedJobSeeker;
