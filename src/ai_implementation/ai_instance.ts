@@ -4,6 +4,7 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { prisma } from "../config/db.js";
+import { Bytes } from "@prisma/client/runtime/client";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,8 +20,10 @@ const systemInstruction = readFileSync(
 
 export async function evaluateJobMatch(
   jobDescription: string,
-  candidateProfile: string,
+  candidateProfile: Bytes,
 ) {
+  const candidateProfileBase64 =
+    Buffer.from(candidateProfile).toString("base64");
   const prompt = `${systemInstruction}
 
 ---EVALUATION REQUEST---
@@ -136,7 +139,8 @@ Please evaluate how well this candidate matches this job.`;
         role: "user",
         parts: [
           {
-            text: systemInstruction + "\n\n" + user_cv + "\n\n" + job_description,
+            text:
+              systemInstruction + "\n\n" + user_cv + "\n\n" + job_description,
           },
         ],
       },
