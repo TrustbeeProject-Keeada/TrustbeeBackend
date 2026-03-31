@@ -111,6 +111,10 @@ export const getJobByIdService = async (jobId: number) => {
       title: true,
       description: true,
       webpage_url: true,
+      country: true,
+      city: true,
+      category: true,
+      status: true,
       company: {
         select: {
           id: true,
