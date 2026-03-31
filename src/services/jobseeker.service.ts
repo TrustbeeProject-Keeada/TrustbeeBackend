@@ -2,27 +2,94 @@ import bcrypt from "bcrypt";
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { UpdateJobSeekerTypeZ } from "../models/jobseeker.model.js";
+import { Prisma } from "../generated/prisma/index.js";
 
-export const getAllJobSeekersService = async () => {
-  const jobseekers = await prisma.jobSeeker.findMany({
+export const getAllJobSeekersService = async (
+  queryFilters?: {
+    search?: string;
+    city?: string;
+    skills?: string;
+  },
+  pagination?: {
+    page: number;
+    limit: number;
+  },
+) => {
+  const whereClause: Prisma.JobSeekerWhereInput = {};
+
+  if (queryFilters?.search) {
+    whereClause.OR = [
+      { firstName: { contains: queryFilters.search, mode: "insensitive" } },
+      { lastName: { contains: queryFilters.search, mode: "insensitive" } },
+      { bio: { contains: queryFilters.search, mode: "insensitive" } },
+    ];
+  }
+
+  if (queryFilters?.city) {
+    whereClause.city = { equals: queryFilters.city, mode: "insensitive" };
+  }
+
+  if (queryFilters?.skills) {
+    whereClause.skills = {
+      has: queryFilters.skills, // This checks if the skills array contains the specified skill
+    };
+  }
+
+  const page = pagination?.page || 1;
+  const limit = pagination?.limit || 10;
+  const skip = (page - 1) * limit;
+
+  const jobSeekers = await prisma.jobSeeker.findMany({
+    where: whereClause,
+    skip: skip,
+    take: limit,
     select: {
       id: true,
       firstName: true,
       lastName: true,
-      email: true,
+      profilePicture: true,
+      city: true,
+      languages: true,
+      skills: true,
+      bio: true,
+      portfolioLink: true,
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 
-  if (!jobseekers) {
+  if (!jobSeekers) {
     throw new AppError("No job seekers found", 404);
   }
 
-  return jobseekers;
+  const totalJobSeekers = await prisma.jobSeeker.count({
+    where: whereClause,
+  });
+  return {
+    jobSeekers,
+    meta: {
+      totalJobSeekers,
+      currentPage: page,
+      totalPages: Math.ceil(totalJobSeekers / limit),
+    },
+  };
 };
 
 export const getJobSeekerByIdService = async (id: number) => {
   const jobseeker = await prisma.jobSeeker.findUnique({
     where: { id: id },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      profilePicture: true,
+      city: true,
+      languages: true,
+      skills: true,
+      bio: true,
+      portfolioLink: true,
+    },
   });
   if (!jobseeker) {
     throw new AppError(`Job seeker with id ${id} not found`, 404);
