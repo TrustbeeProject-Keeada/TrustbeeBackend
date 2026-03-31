@@ -87,7 +87,7 @@ export const getAllJobsService = async (
     },
   });
 
-  if (jobs.length === 0) {
+  if (!jobs) {
     throw new AppError("No jobs found", 404);
   }
 
@@ -251,7 +251,7 @@ export const archiveExpiredJobsService = async () => {
   return updatedJobs;
 };
 
-export const getJobBankService
+export const getJobBankService = async (
   queryFilters?: {
     status?: string;
   },
