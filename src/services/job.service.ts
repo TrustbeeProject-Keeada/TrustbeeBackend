@@ -23,6 +23,11 @@ export const getAllJobsService = async (
     whereClause.OR = [
       { title: { contains: queryFilters.search, mode: "insensitive" } },
       { description: { contains: queryFilters.search, mode: "insensitive" } },
+      {
+        company: {
+          companyName: { contains: queryFilters.search, mode: "insensitive" },
+        },
+      },
     ];
   }
 
@@ -62,6 +67,9 @@ export const getAllJobsService = async (
       title: true,
       description: true,
       webpage_url: true,
+      country: true,
+      city: true,
+      category: true,
       status: true,
       company: {
         select: {
@@ -79,7 +87,7 @@ export const getAllJobsService = async (
     },
   });
 
-  if (jobs.length === 0) {
+  if (!jobs) {
     throw new AppError("No jobs found", 404);
   }
 
