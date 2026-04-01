@@ -105,12 +105,16 @@ export const UpdateCompanyRecruiterByIdService = async (
   const updatedCompanyRecruiter = await prisma.companyRecruiter.update({
     where: { id: id },
     data: {
-      companyName: data.companyname,
+      companyName: data.companyName,
       email: data.email,
-      phoneNumber: data.phonenumber,
+      phoneNumber: data.phoneNumber,
       password: hashedPassword,
       description: data.description,
-      logoUrl: data.logourl,
+      organizationNumber: data.organizationNumber,
+      logoUrl: data.logoUrl,
+      city: data.city,
+      country: data.country,
+      industry: data.industry,
     },
   });
   if (!updatedCompanyRecruiter) {

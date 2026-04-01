@@ -49,6 +49,7 @@ model JobSeeker {
 
   phoneNumber       String?
   city              String?
+  country           String?
   languages         String[]
   skills            String[]
   bio               String?

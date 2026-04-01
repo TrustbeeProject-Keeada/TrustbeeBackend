@@ -8,18 +8,18 @@ export const registerJobRecruiterValidation = z.object({
       password: z
         .string()
         .min(8, "Password must be at least 8 characters long"),
-      companyname: z.string().min(1, "Company name is required"),
-      organizationnumber: z
+      companyName: z.string().min(1, "Company name is required"),
+      organizationNumber: z
         .number()
         .positive("Organization number must be a positive integer"),
-      phonenumber: z
+      phoneNumber: z
         .string()
         .regex(
           /^\+?(\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
           "Invalid phone number format",
         ),
       description: z.string().optional(),
-      logourl: z.string("Invalid logo URL").optional(),
+      logoUrl: z.string().url("Invalid logo URL").optional(),
     })
     .strict(),
 });
@@ -44,11 +44,11 @@ export const updateJobRecruiterValidation = z.object({
         .string()
         .min(8, "Password must be at least 8 characters long")
         .optional(),
-      companyname: z.string().min(1, "Company name is required").optional(),
-      organizationnumber: z
+      companyName: z.string().min(1, "Company name is required").optional(),
+      organizationNumber: z
         .number("Organization number must be a positive integer")
         .optional(),
-      phonenumber: z
+      phoneNumber: z
         .string()
         .regex(
           /^\+?(\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
@@ -56,7 +56,10 @@ export const updateJobRecruiterValidation = z.object({
         )
         .optional(),
       description: z.string().optional(),
-      logourl: z.string("Invalid logo URL").optional(),
+      logoUrl: z.string().url("Invalid logo URL").optional(),
+      city: z.string().min(1, "City cannot be empty").optional(),
+      country: z.string().min(1, "Country cannot be empty").optional(),
+      industry: z.string().min(1, "Industry cannot be empty").optional(),
     })
     .strict(),
 });

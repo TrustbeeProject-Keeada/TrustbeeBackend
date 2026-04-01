@@ -71,6 +71,7 @@ export const getAllJobsService = async (
       city: true,
       category: true,
       status: true,
+      expiresAt: true,
       company: {
         select: {
           id: true,
@@ -169,9 +170,14 @@ export const updateJobByIdService = async (
     throw new AppError("Forbidden", 403);
   }
 
+  const updatePayload: Prisma.JobUpdateInput = { ...data };
+
+  if (data.expiresAt) {
+    updatePayload.expiresAt = new Date(data.expiresAt);
+  }
   return await prisma.job.update({
     where: { id: jobId },
-    data,
+    data: updatePayload,
   });
 };
 

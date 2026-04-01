@@ -27,8 +27,8 @@ export const registerJobSeekerService = async (
 
   return prisma.jobSeeker.create({
     data: {
-      firstName: data.firstname,
-      lastName: data.lastname,
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
       password: hashedPassword,
     },
@@ -96,10 +96,10 @@ export const registerCompanyRecruiterService = async (
   return prisma.companyRecruiter.create({
     data: {
       email: data.email,
-      companyName: data.companyname,
+      companyName: data.companyName,
       password: hashedPassword,
-      organizationNumber: data.organizationnumber,
-      phoneNumber: data.phonenumber,
+      organizationNumber: data.organizationNumber,
+      phoneNumber: data.phoneNumber,
     },
   });
 };
