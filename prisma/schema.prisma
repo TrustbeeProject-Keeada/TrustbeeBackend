@@ -48,13 +48,13 @@ model JobSeeker {
   role Role @default(JOB_SEEKER)
 
   phoneNumber       String?
-  profilePicture    String?
   city              String?
   languages         String[]
   skills            String[]
   bio               String?
   portfolioLink     String?
-  cv                String?
+  cv                Bytes?
+  profilePicture    Bytes?
   personalStatement String?
 
   // ! Extra 

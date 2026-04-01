@@ -65,7 +65,7 @@ export const GetAllCompanyRecruitersService = async (
       },
     },
   });
-  if (companyRecruiters.length === 0) {
+  if (!companyRecruiters) {
     throw new AppError("No company recruiters found", 404);
   }
 

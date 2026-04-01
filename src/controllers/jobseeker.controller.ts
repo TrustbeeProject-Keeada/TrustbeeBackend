@@ -13,7 +13,23 @@ export const getJobSeekers = async (
   next: NextFunction,
 ) => {
   try {
-    const jobseekers = await getAllJobSeekersService();
+    const search = req.query.search as string | undefined;
+    const city = req.query.city as string | undefined;
+    const skills = req.query.skills as string | undefined;
+
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const jobseekers = await getAllJobSeekersService(
+      {
+        search,
+        city,
+        skills,
+      },
+      {
+        page,
+        limit,
+      },
+    );
 
     if (!jobseekers) {
       return res.status(404).json({ status: "No job seekers found" });
