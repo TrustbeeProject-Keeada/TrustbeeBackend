@@ -1,12 +1,16 @@
 import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { prisma } from "../config/db.js";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.gemini_api_key,
 });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const systemInstruction = readFileSync(
   join(__dirname, "ai_matchmaking_instruction.txt"),
