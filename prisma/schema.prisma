@@ -77,9 +77,9 @@ model CompanyRecruiter {
   email              String     @unique
   companyName        String
   password           String
-  organizationNumber Int
+  organizationNumber Int        @unique
   description        String?
-  phoneNumber        String
+  phoneNumber        String     @unique
   logoUrl            String?
   role               Role       @default(COMPANY_RECRUITER)
   jobs               Job[]
