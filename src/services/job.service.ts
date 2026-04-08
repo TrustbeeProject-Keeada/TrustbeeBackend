@@ -141,7 +141,30 @@ export const createJobService = async (
       description: data.description,
       expiresAt: new Date(data.expiresAt),
       webpage_url: data.webpage_url,
+      country: data.country,
+      city: data.city,
+      category: data.category,
     },
+    // select: {
+    //   id: true,
+    //   title: true,
+    //   description: true,
+    //   webpage_url: true,
+    //   country: true,
+    //   city: true,
+    //   category: true,
+    //   status: true,
+    //   company: {
+    //     select: {
+    //       id: true,
+    //       companyName: true,
+    //       email: true,
+    //       description: true,
+    //       country: true,
+    //       logoUrl: true,
+    //     },
+    //   },
+    // },
   });
   if (!newJob) {
     throw new AppError("Failed to create job", 500);
