@@ -1,13 +1,8 @@
 import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
 import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { join } from "path";
 import { prisma } from "../config/db.js";
-import { Bytes } from "@prisma/client/runtime/client";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const ai = new GoogleGenAI({
   apiKey: process.env.gemini_api_key,
@@ -20,10 +15,9 @@ const systemInstruction = readFileSync(
 
 export async function evaluateJobMatch(
   jobDescription: string,
-  candidateProfile: Bytes,
+  candidateProfileText: string,
 ) {
-  const candidateProfileBase64 =
-    Buffer.from(candidateProfile).toString("base64");
+  // candidateProfileText is expected to be extracted plain text from the CV
   const prompt = `${systemInstruction}
 
 ---EVALUATION REQUEST---
@@ -32,13 +26,13 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 CANDIDATE PROFILE:
-${candidateProfile}
+${candidateProfileText}
 
 TASK: Evaluate the job-to-candidate match and respond ONLY with the JSON structure specified above.
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-2.0-flash-lite-001",
     contents: [
       {
         role: "user",

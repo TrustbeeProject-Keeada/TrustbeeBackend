@@ -4,7 +4,7 @@ import {
   applyForJobService,
   getJobApplicationsService,
   updateApplicationStatusService,
-} from "../services/application.services.js";
+} from "../services/application.service.js";
 
 export const applyForJob = async (
   req: Request,
