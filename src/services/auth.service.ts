@@ -25,16 +25,23 @@ export const registerJobSeekerService = async (
   // encrypt the password
   const hashedPassword = await bcrypt.hash(data.password, 12);
 
-  return prisma.jobSeeker.create({
+  const createdJobSeeker = await prisma.jobSeeker.create({
     data: {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
       password: hashedPassword,
     },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+    },
   });
-};
 
+  return createdJobSeeker;
+};
 export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
   // compare the passed in email with the one in the database
   const jobSeeker = await prisma.jobSeeker.findUnique({
@@ -76,7 +83,8 @@ export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
     },
   );
 
-  return { ...jobSeeker, token };
+  const { password, ...jobSeekerExcludingPassword } = jobSeeker; // this is to exclude the password from the returned object
+  return { ...jobSeekerExcludingPassword, token };
 };
 
 export const registerCompanyRecruiterService = async (
@@ -100,6 +108,13 @@ export const registerCompanyRecruiterService = async (
       password: hashedPassword,
       organizationNumber: data.organizationNumber,
       phoneNumber: data.phoneNumber,
+    },
+    select: {
+      id: true,
+      email: true,
+      companyName: true,
+      organizationNumber: true,
+      phoneNumber: true,
     },
   });
 };
@@ -147,5 +162,6 @@ export const logInCompanyRecruiterService = async (
     },
   );
 
-  return { ...companyRecruiter, token };
+  const { password, ...companyRecruiterExcludingPassword } = companyRecruiter; // this is to exclude the password from the returned object
+  return { ...companyRecruiterExcludingPassword, token };
 };
