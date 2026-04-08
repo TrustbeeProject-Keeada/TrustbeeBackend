@@ -55,6 +55,7 @@ export const GetAllCompanyRecruitersService = async (
       id: true,
       companyName: true,
       email: true,
+      phoneNumber: true,
       description: true,
       country: true,
       city: true,
@@ -86,6 +87,21 @@ export const GetAllCompanyRecruitersService = async (
 export const GetCompanyRecruiterByIdService = async (id: number) => {
   const companyRecruiter = await prisma.companyRecruiter.findUnique({
     where: { id: id },
+    select: {
+      id: true,
+      companyName: true,
+      email: true,
+      phoneNumber: true,
+      description: true,
+      organizationNumber: true,
+      logoUrl: true,
+      city: true,
+      country: true,
+      industry: true,
+      _count: {
+        select: { jobs: { where: { status: "ACTIVE" } } },
+      },
+    },
   });
   if (!companyRecruiter) {
     throw new AppError(`Company recruiter with id ${id} not found`, 404);
@@ -116,6 +132,18 @@ export const UpdateCompanyRecruiterByIdService = async (
       country: data.country,
       industry: data.industry,
     },
+    select: {
+      id: true,
+      companyName: true,
+      email: true,
+      phoneNumber: true,
+      description: true,
+      organizationNumber: true,
+      logoUrl: true,
+      city: true,
+      country: true,
+      industry: true,
+    },
   });
   if (!updatedCompanyRecruiter) {
     throw new AppError(`Company recruiter with id ${id} not found`, 404);
@@ -135,6 +163,18 @@ export const DeleteCompanyRecruiterByIdService = async (id: number) => {
 
   const deletedRecruiter = await prisma.companyRecruiter.delete({
     where: { id: id },
+    select: {
+      id: true,
+      companyName: true,
+      email: true,
+      phoneNumber: true,
+      description: true,
+      organizationNumber: true,
+      logoUrl: true,
+      city: true,
+      country: true,
+      industry: true,
+    },
   });
 
   return deletedRecruiter;

@@ -122,8 +122,8 @@ export const updateJobSeekerByIdService = async (
   const updatedJobSeeker = await prisma.jobSeeker.update({
     where: { id: jobseekerId },
     data: {
-      firstName: data.firstname,
-      lastName: data.lastname,
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
       password: hashedPassword,
       cv: cvBuffer,
@@ -144,6 +144,12 @@ export const deleteJobSeekerByIdService = async (jobseekerId: number) => {
 
   const deletedJobSeeker = await prisma.jobSeeker.delete({
     where: { id: jobseekerId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+    },
   });
 
   return deletedJobSeeker;
