@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from "express";
-import mongoose from "mongoose";
+import { Prisma } from "../generated/prisma/index.js";
 import { ZodError } from "zod";
 import { AppError } from "../utils/app.error.js";
 
@@ -35,34 +35,29 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     }));
   }
 
-  // Mongoose invalid ObjectId / cast issues (e.g. /users/not-an-id)
-  if (err instanceof mongoose.Error.CastError) {
-    statusCode = 400;
-    message = `Invalid ${err.path}`;
-    details = { path: err.path, value: err.value };
+  // Prisma errors
+  else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    // Handle specific Prisma error codes
+    // P2002: Unique constraint failed
+    // P2025: Record not found
+    if (err.code === "P2002") {
+      statusCode = 409;
+      message = "Duplicate key error: A record with this value already exists.";
+      details = {
+        fields: err.meta?.target,
+      };
+    } else if (err.code === "P2025") {
+      statusCode = 404;
+      message = "Record not found.";
+    }
   }
 
-  // Mongoose schema validation errors
-  if (err instanceof mongoose.Error.ValidationError) {
-    statusCode = 400;
-    message = "Database Validation Error";
-    details = Object.values(err.errors).map((e) => ({
-      path: e.path,
-      message: e.message,
-    }));
+  if (statusCode === 500) {
+    console.error("Unexpected error:", err);
   }
 
-  // Mongo duplicate key error (unique indexes), e.g. duplicate email
-  if (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as any).code === 11000
-  ) {
-    statusCode = 409;
-    message = "Duplicate key error";
-    details = (err as any).keyValue ?? (err as any).keyPattern;
-  }
-
-  res.status(statusCode).json({ message, details, errors });
+  res.status(statusCode).json({
+    message,
+    ...(details !== undefined ? { details } : {}),
+  });
 };
