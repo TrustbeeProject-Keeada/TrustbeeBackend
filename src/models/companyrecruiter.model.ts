@@ -10,10 +10,12 @@ export const registerJobRecruiterValidation = z.object({
         .min(8, "Password must be at least 8 characters long"),
       companyName: z.string().min(1, "Company name is required"),
       organizationNumber: z
-        .number()
-        .positive("Organization number must be a positive integer"),
+        .string()
+        .regex(/^\d{10}$/, "Organization number must be exactly 10 digits"),
       phoneNumber: z
         .string()
+        .min(12, "Phone number is too short")
+        .max(15, "Phone number is too long")
         .regex(
           /^\+?(\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
           "Invalid phone number format",
@@ -46,15 +48,16 @@ export const updateJobRecruiterValidation = z.object({
         .optional(),
       companyName: z.string().min(1, "Company name is required").optional(),
       organizationNumber: z
-        .number("Organization number must be a positive integer")
-        .optional(),
+        .string()
+        .regex(/^\d{10}$/, "Organization number must be exactly 10 digits"),
       phoneNumber: z
         .string()
+        .min(12, "Phone number is too short")
+        .max(15, "Phone number is too long")
         .regex(
           /^\+?(\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
           "Invalid phone number format",
-        )
-        .optional(),
+        ),
       description: z.string().optional(),
       logoUrl: z.string().url("Invalid logo URL").optional(),
       city: z.string().min(1, "City cannot be empty").optional(),
