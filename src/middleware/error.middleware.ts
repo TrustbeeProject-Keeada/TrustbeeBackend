@@ -35,7 +35,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     }));
   }
 
-  // Prisma errors
+  // Prisma errorsA
   else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     // Handle specific Prisma error codes
     // P2002: Unique constraint failed
