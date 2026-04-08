@@ -77,7 +77,7 @@ model CompanyRecruiter {
   email              String     @unique
   companyName        String
   password           String
-  organizationNumber Int        @unique
+  organizationNumber String     @unique
   description        String?
   phoneNumber        String     @unique
   logoUrl            String?

@@ -88,10 +88,6 @@ export const getAllJobsService = async (
     },
   });
 
-  if (!jobs) {
-    throw new AppError("No jobs found", 404);
-  }
-
   const totalJobs = await prisma.job.count({ where: whereClause });
 
   return {

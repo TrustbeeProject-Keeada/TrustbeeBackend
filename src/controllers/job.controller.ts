@@ -8,6 +8,7 @@ import {
   changeJobStatusService,
   getJobBankService,
 } from "../services/job.service.js";
+import { AppError } from "../utils/app.error.js";
 
 export const getAllJobs = async (
   req: Request,
@@ -17,15 +18,34 @@ export const getAllJobs = async (
   try {
     const search = req.query.search as string | undefined;
     const status = (req.query.status as "ACTIVE" | "ARCHIVED") || "ACTIVE";
-    const companyId = req.query.companyId
-      ? Number(req.query.companyId)
-      : undefined;
+
+    let companyId: number | undefined;
+    if (req.query.companyId) {
+      companyId = Number(req.query.companyId);
+      if (isNaN(companyId)) {
+        return next(new AppError("companyId måste vara en giltig siffra", 400));
+      }
+    }
+
     const city = req.query.city as string | undefined;
     const country = req.query.country as string | undefined;
     const category = req.query.category as string | undefined;
 
-    const page = req.query.page ? Number(req.query.page) : 1;
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    let page = 1;
+    if (req.query.page) {
+      page = Number(req.query.page);
+      if (isNaN(page)) {
+        return next(new AppError("page måste vara en giltig siffra", 400));
+      }
+    }
+
+    let limit = 10;
+    if (req.query.limit) {
+      limit = Number(req.query.limit);
+      if (isNaN(limit)) {
+        return next(new AppError("limit måste vara en giltig siffra", 400));
+      }
+    }
 
     const jobs = await getAllJobsService(
       {
