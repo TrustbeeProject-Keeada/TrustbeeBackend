@@ -43,7 +43,6 @@ export const registerJobSeekerService = async (
   return createdJobSeeker;
 };
 export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
-  // compare the passed in email with the one in the database
   const jobSeeker = await prisma.jobSeeker.findUnique({
     where: { email: data.email },
   });
@@ -52,17 +51,15 @@ export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
     throw new AppError("Invalid email or password", 401);
   }
 
-  // compare the passed in password with the one in the database
   const isPasswordValid = await bcrypt.compare(
     data.password,
-    jobSeeker.password, // finds the password assigned to the email and compares it with the passed in password
+    jobSeeker.password,
   );
 
   if (!isPasswordValid) {
     throw new AppError("Invalid email or password", 401);
   }
 
-  // add jwt token generation here
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
     throw new AppError("JWT_SECRET not set", 500);
@@ -83,7 +80,7 @@ export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
     },
   );
 
-  const { password, ...jobSeekerExcludingPassword } = jobSeeker; // this is to exclude the password from the returned object
+  const { password, ...jobSeekerExcludingPassword } = jobSeeker;
   return { ...jobSeekerExcludingPassword, token };
 };
 
