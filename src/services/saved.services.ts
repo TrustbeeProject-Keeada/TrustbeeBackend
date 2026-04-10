@@ -8,7 +8,7 @@ import { AppError } from "../utils/app.error.js";
 export const saveJobService = async (jobSeekerId: number, jobId: number) => {
   if (!jobId || isNaN(jobId)) {
     throw new AppError(
-      "Ogiltigt ID. Jobbet du försöker spara verkar inte finnas.",
+      "Invalid ID. The job you are trying to save could not be found.",
       400,
     );
   }
@@ -16,7 +16,7 @@ export const saveJobService = async (jobSeekerId: number, jobId: number) => {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) {
     throw new AppError(
-      "Jobbet du försöker spara finns tyvärr inte längre.",
+      "The job you are trying to save could not be found.",
       404,
     );
   }
@@ -26,7 +26,7 @@ export const saveJobService = async (jobSeekerId: number, jobId: number) => {
   });
 
   if (existing) {
-    throw new AppError("Du har redan sparat detta jobb", 400);
+    throw new AppError("You have already saved this job.", 400);
   }
 
   return await prisma.savedJob.create({ data: { jobSeekerId, jobId } });
@@ -34,17 +34,28 @@ export const saveJobService = async (jobSeekerId: number, jobId: number) => {
 
 export const unsaveJobService = async (jobSeekerId: number, jobId: number) => {
   if (!jobId || isNaN(jobId)) {
-    throw new AppError("Ogiltigt ID. Vi kunde inte ta bort jobbet.", 400);
+    throw new AppError("Invalid ID. We could not remove the job.", 400);
   }
 
+  // 1. KOLLA FÖRST: Finns jobbet överhuvudtaget i systemet?
+  const jobExists = await prisma.job.findUnique({
+    where: { id: jobId },
+  });
+
+  if (!jobExists) {
+    throw new AppError("Job with this ID does not exist.", 404);
+  }
+
+  // 2. KOLLA SEN: Är jobbet sparat av användaren?
   const existing = await prisma.savedJob.findUnique({
     where: { jobSeekerId_jobId: { jobSeekerId, jobId } },
   });
 
   if (!existing) {
-    throw new AppError("Detta jobb är inte sparat sedan tidigare.", 404);
+    throw new AppError("This job is not saved.", 404);
   }
 
+  // 3. RADERA
   return await prisma.savedJob.delete({
     where: { jobSeekerId_jobId: { jobSeekerId, jobId } },
   });
@@ -72,7 +83,7 @@ export const saveCompanyService = async (
 ) => {
   if (!companyId || isNaN(companyId)) {
     throw new AppError(
-      "Ogiltigt ID. Företaget du försöker spara verkar inte finnas.",
+      "Invalid ID. The company you are trying to save could not be found.",
       400,
     );
   }
@@ -82,7 +93,10 @@ export const saveCompanyService = async (
   });
 
   if (!company) {
-    throw new AppError("Företaget hittades inte.", 404);
+    throw new AppError(
+      "The company you are trying to save could not be found.",
+      404,
+    );
   }
 
   const existing = await prisma.savedCompany.findUnique({
@@ -90,7 +104,7 @@ export const saveCompanyService = async (
   });
 
   if (existing) {
-    throw new AppError("Du har redan sparat detta företag.", 400);
+    throw new AppError("You have already saved this company.", 400);
   }
 
   return await prisma.savedCompany.create({ data: { jobSeekerId, companyId } });
@@ -101,17 +115,28 @@ export const unsaveCompanyService = async (
   companyId: number,
 ) => {
   if (!companyId || isNaN(companyId)) {
-    throw new AppError("Ogiltigt ID. Vi kunde inte ta bort företaget.", 400);
+    throw new AppError("Invalid ID. We could not remove the company.", 400);
   }
 
+  // 1. KOLLA OM FÖRETAGET ÖVERHUVUDTAGET FINNS
+  const company = await prisma.companyRecruiter.findUnique({
+    where: { id: companyId },
+  });
+
+  if (!company) {
+    throw new AppError("Company with this ID does not exist.", 404);
+  }
+
+  // 2. KOLLA OM DET ÄR SPARAT
   const existing = await prisma.savedCompany.findUnique({
     where: { jobSeekerId_companyId: { jobSeekerId, companyId } },
   });
 
   if (!existing) {
-    throw new AppError("Detta företag är inte sparat sedan tidigare.", 404);
+    throw new AppError("This company is not saved.", 404);
   }
 
+  // 3. RADERA OM ALLT OVAN STÄMMER
   return await prisma.savedCompany.delete({
     where: { jobSeekerId_companyId: { jobSeekerId, companyId } },
   });
@@ -120,7 +145,7 @@ export const unsaveCompanyService = async (
 export const getSavedCompaniesService = async (jobSeekerId: number) => {
   if (!jobSeekerId || isNaN(jobSeekerId)) {
     throw new AppError(
-      "Ogiltigt användar-ID. Vi kunde inte hämta dina sparade företag.",
+      "Invalid user ID. We could not fetch your saved companies.",
       400,
     );
   }
