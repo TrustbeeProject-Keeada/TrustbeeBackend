@@ -35,7 +35,7 @@ export const createApp = () => {
   app.use("/api/auth", authRoutes);
 
   // support routes
-  app.use("/api", supportRoutes);
+  app.use("/api/support", supportRoutes);
 
   // AI routes
   app.use("/api/", aiRoutes);
