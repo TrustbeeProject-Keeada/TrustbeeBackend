@@ -21,8 +21,20 @@ export const sendMessageService = async (
   }
 
   if (data.receiverRole === "JOB_SEEKER") {
+    const receiverExists = await prisma.jobSeeker.findUnique({
+      where: { id: data.receiverId },
+    });
+    if (!receiverExists) {
+      throw new AppError("Receiver job seeker not found", 404);
+    }
     messageData.receiverJobSeekerId = data.receiverId;
   } else if (data.receiverRole === "COMPANY_RECRUITER") {
+    const receiverExists = await prisma.companyRecruiter.findUnique({
+      where: { id: data.receiverId },
+    });
+    if (!receiverExists) {
+      throw new AppError("Recruiter not found", 404);
+    }
     messageData.receiverRecruiterId = data.receiverId;
   } else {
     throw new AppError("Invalid receiver role", 400);
