@@ -1,12 +1,25 @@
 import { prisma } from "../config/db.js";
 import { SupportTicketType } from "../models/support.model.js";
+import { AppError } from "../utils/app.error.js";
 
 export class SupportTicketService {
-  /**
-   * Skapar en supportbiljett i databasen och hanterar eventuellt mejlutskick.
-   */
   static async createTicket(data: SupportTicketType, sendAsEmail: boolean) {
-    // 1. Spara i databasen (viktigt för historik och admin-vy)
+    // 1. DUBBLETT-KOLL (Spärr mot spam av samma text från samma person)
+    const duplicate = await prisma.supportTicket.findFirst({
+      where: {
+        email: data.email,
+        message: data.message,
+        createdAt: {
+          gte: new Date(Date.now() - 10 * 60 * 1000), // Kollar 10 minuter bakåt
+        },
+      },
+    });
+
+    if (duplicate) {
+      throw new AppError("Du har redan skickat detta meddelande nyligen.", 400);
+    }
+
+    // 2. SPARA I DATABASEN
     const newTicket = await prisma.supportTicket.create({
       data: {
         firstname: data.firstname,
@@ -17,25 +30,13 @@ export class SupportTicketService {
       },
     });
 
-    // 2. Om användaren valt att skicka som mejl
+    // 3. SIMULERA MEJLUTSKICK
     if (sendAsEmail) {
-      await this.sendSupportEmail(newTicket);
+      console.log(
+        `[MAIL]: Ticket #${newTicket.id} skickad till supporten från ${data.email}.`,
+      );
     }
 
     return newTicket;
-  }
-
-  /**
-   * Intern metod för att hantera mejllogik (t.ex. via Nodemailer)
-   */
-  private static async sendSupportEmail(ticket: any) {
-    // Här lägger du senare in din Nodemailer-logik.
-    // Just nu simulerar vi bara att mejlet skickas.
-    console.log(
-      `[EMAIL SERVICE]: Sending ticket #${ticket.id} to support@trustbee.se`,
-    );
-    console.log(
-      `From: ${ticket.email} - Message: ${ticket.message.substring(0, 20)}...`,
-    );
   }
 }

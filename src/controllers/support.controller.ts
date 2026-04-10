@@ -4,7 +4,7 @@ import { SupportTicketService } from "../services/support.services.js";
 export class SupportTicketController {
   static async submit(req: Request, res: Response, next: NextFunction) {
     try {
-      // Datan är redan validerad av middleware när vi når hit
+      // req.body är redan validerad av din Zod-middleware här
       const result = await SupportTicketService.createTicket(
         req.body,
         req.body.sendAsEmail,
@@ -16,7 +16,7 @@ export class SupportTicketController {
         data: result,
       });
     } catch (err) {
-      next(err); // Skickar felet till din globala error handler
+      next(err); // Skickar fel (t.ex. dubblett-felet) till din globala error handler
     }
   }
 }
