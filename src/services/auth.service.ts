@@ -101,8 +101,8 @@ export const registerCompanyRecruiterService = async (
   return prisma.companyRecruiter.create({
     data: {
       email: data.email,
-      companyName: data.companyName,
       password: hashedPassword,
+      companyName: data.companyName,
       organizationNumber: data.organizationNumber,
       phoneNumber: data.phoneNumber,
     },

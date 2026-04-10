@@ -20,8 +20,6 @@ export const registerJobRecruiterValidation = z.object({
           /^\+?(\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
           "Invalid phone number format",
         ),
-      description: z.string().optional(),
-      logoUrl: z.string().url("Invalid logo URL").optional(),
     })
     .strict(),
 });

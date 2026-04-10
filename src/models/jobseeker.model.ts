@@ -7,10 +7,6 @@ export const registerJobSeekerValidation = z.object({
       lastName: z.string("Please enter a valid last name").min(2),
       email: z.email("Please enter a valid email"),
       password: z.string("Please enter a valid password").min(8),
-      cv: z.string("Please enter a valid CV").optional(),
-      personalStatement: z
-        .string("Please enter a valid personal statement")
-        .optional(),
     })
     .strict(),
 });
@@ -33,6 +29,8 @@ export const updateJobSeekerValidation = z.object({
       password: z.string("Please enter a valid password").min(8).optional(),
       phoneNumber: z
         .string()
+        .min(12, "Phone number is too short")
+        .max(15, "Phone number is too long")
         .regex(
           /^\+?(\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
           "Invalid phone number format",

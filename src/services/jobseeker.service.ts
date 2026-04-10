@@ -107,6 +107,13 @@ export const updateJobSeekerByIdService = async (
     ? Buffer.from(data.cv.split(",")[1] || data.cv, "base64")
     : undefined;
 
+  const profilePictureBuffer = data.profilePicture
+    ? Buffer.from(
+        data.profilePicture.split(",")[1] || data.profilePicture,
+        "base64",
+      )
+    : undefined;
+
   const existingJobSeeker = await prisma.jobSeeker.findUnique({
     where: { id: jobseekerId },
   });
@@ -126,8 +133,16 @@ export const updateJobSeekerByIdService = async (
       lastName: data.lastName,
       email: data.email,
       password: hashedPassword,
+      phoneNumber: data.phoneNumber,
+      city: data.city,
+      country: data.country,
+      bio: data.bio,
+      portfolioLink: data.portfolioLink,
+      languages: data.languages,
+      skills: data.skills,
       cv: cvBuffer,
       personalStatement: data.personalStatement,
+      profilePicture: profilePictureBuffer,
     },
   });
   return updatedJobSeeker;
