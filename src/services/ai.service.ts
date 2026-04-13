@@ -61,18 +61,39 @@ const fetchJobById = async (jobId: number, source?: "database" | "jobbank") => {
         
         // Debug: log the raw response structure
         console.log(`🔍 Job bank response keys:`, Object.keys(hit).slice(0, 20));
-        if (hit.description) console.log(`📝 description type:`, typeof hit.description, `length:`, String(hit.description).length);
+        if (hit.description) {
+          console.log(`📝 description type:`, typeof hit.description);
+          if (typeof hit.description === "object") {
+            console.log(`📝 description keys:`, Object.keys(hit.description).slice(0, 10));
+            console.log(`📝 description content:`, JSON.stringify(hit.description).substring(0, 200));
+          } else {
+            console.log(`📝 description length:`, String(hit.description).length);
+          }
+        }
 
         if (hit && hit.id) {
           // Build description from all available fields
           const descriptionParts: string[] = [];
 
           // Helper function to safely convert to string
-          const toString = (value: any): string | null => {
+          const toString = (value: any, maxLength: number = 500): string | null => {
             if (!value) return null;
             if (typeof value === "string") return value;
-            if (typeof value === "object" && value.label) return value.label;
-            if (typeof value === "object" && value.name) return value.name;
+            if (typeof value === "object") {
+              // Try common field names for text content
+              if (value.text) return String(value.text).substring(0, maxLength);
+              if (value.label) return String(value.label);
+              if (value.name) return String(value.name);
+              if (value.description) return String(value.description).substring(0, maxLength);
+              if (value.value) return String(value.value);
+              if (value.content) return String(value.content).substring(0, maxLength);
+              // If it's an array of objects with text, join them
+              if (Array.isArray(value)) {
+                return value.map(v => toString(v, 100)).filter(v => v).join(" ");
+              }
+              // Last resort: return empty (don't use [object Object])
+              return null;
+            }
             return String(value);
           };
 
