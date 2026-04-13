@@ -7,6 +7,7 @@ import {
   deleteJobByIdService,
   changeJobStatusService,
   getJobBankService,
+  getBankJobByIdService,
 } from "../services/job.service.js";
 import { AppError } from "../utils/app.error.js";
 
@@ -194,6 +195,26 @@ export const getJobBank = async (
       { search },
     );
     res.status(200).json(jobs);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getJobBankById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const id = req.params.id as string;
+    const idInt = Number(id);
+
+    if (!Number.isInteger(idInt) || idInt <= 0) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
+    const job = await getBankJobByIdService(idInt);
+    res.status(200).json(job);
   } catch (error) {
     next(error);
   }

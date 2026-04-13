@@ -7,6 +7,7 @@ import {
   deleteJobById,
   changeJobStatus,
   getJobBank,
+  getJobBankById,
 } from "../controllers/job.controller.js";
 import { validate } from "../middleware/validate.middleware.js";
 import {
@@ -20,6 +21,7 @@ const router = Router();
 
 router.get("/", getAllJobs);
 router.get("/job_bank", getJobBank);
+router.get("/job_bank/:id", getJobBankById);
 router.get("/:id", getJobById);
 router.post(
   "/",

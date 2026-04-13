@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from "express";
+import cors, { type CorsOptions } from "cors";
 import jobSeekerRoutes from "./routes/jobseeker.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
@@ -14,6 +15,18 @@ import savedRoutes from "./routes/saved.routes.js";
 
 export const createApp = () => {
   const app = express();
+
+  // enable CORS
+  const corsOrigin = process.env.CORS_ORIGIN;
+  const corsOptions: CorsOptions = {
+    origin: corsOrigin ? corsOrigin.split(",") : true,
+    credentials: true,
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  };
+
+  app.use(cors(corsOptions));
+  // cors middleware handles preflight requests
 
   app.use(express.json());
 
@@ -38,7 +51,7 @@ export const createApp = () => {
   app.use("/api", supportRoutes);
 
   // AI routes
-  app.use("/api/", aiRoutes);
+  app.use("/api", aiRoutes);
 
   app.use(errorHandler);
 

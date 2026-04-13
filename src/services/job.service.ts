@@ -291,31 +291,99 @@ export const getJobBankService = async (
 
     const data = await response.json();
 
+    // Normalize job_bank API response to match internal Job model structure
     const mappedJobs = Array.isArray(data.hits)
       ? data.hits.map((hit: any) => ({
           id: hit.id,
           title: hit.headline,
-          company: hit.employer?.name || hit.employer?.workplace || "Unknown",
-          url: hit.webpage_url,
-          applicationDeadline: hit.application_deadline,
-          location:
-            hit.workplace_address?.city || hit.workplace_address?.region || "",
+          description: hit.description || "",
+          webpage_url: hit.webpage_url,
+          country: hit.workplace_address?.country || null,
+          city:
+            hit.workplace_address?.city ||
+            hit.workplace_address?.region ||
+            null,
+          category: hit.occupation?.label || null,
+          status: hit.removed ? "ARCHIVED" : "ACTIVE",
+          expiresAt: hit.application_deadline
+            ? new Date(hit.application_deadline)
+            : null,
+          company: {
+            id: hit.employer?.id || null,
+            companyName:
+              hit.employer?.name || hit.employer?.workplace || "Unknown",
+            email: null,
+            description: null,
+            country: hit.workplace_address?.country || null,
+            logoUrl: null,
+          },
           employmentType: hit.employment_type?.label || null,
           salaryType: hit.salary_type?.label || null,
-          occupation: hit.occupation?.label || null,
-          removed: hit.removed,
         }))
       : [];
 
+    const totalJobs = data.total || 0;
+    const totalPages = Math.ceil(totalJobs / limit);
+
     return {
-      total: data.total,
-      positions: data.positions,
-      query_time_in_millis: data.query_time_in_millis,
-      result_time_in_millis: data.result_time_in_millis,
-      hits: mappedJobs,
+      jobs: mappedJobs,
+      meta: {
+        totalJobs,
+        currentPage: page,
+        totalPages,
+      },
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new AppError(`Error fetching job bank data: ${message}`, 500);
+  }
+};
+
+export const getBankJobByIdService = async (jobId: number) => {
+  try {
+    const url = `https://jobsearch.api.jobtechdev.se/ad/${jobId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new AppError(
+        `Failed to fetch job from bank: ${response.statusText}`,
+        response.status,
+      );
+    }
+
+    const hit = await response.json();
+
+    // The /ad/ endpoint returns a single job object directly
+    if (!hit || !hit.id) {
+      throw new AppError(`Job with id ${jobId} not found in job bank`, 404);
+    }
+
+    // Map to normalized structure
+    return {
+      id: hit.id,
+      title: hit.headline,
+      description: hit.description || "",
+      webpage_url: hit.webpage_url,
+      country: hit.workplace_address?.country || null,
+      city:
+        hit.workplace_address?.city || hit.workplace_address?.region || null,
+      category: hit.occupation?.label || null,
+      status: hit.removed ? "ARCHIVED" : "ACTIVE",
+      expiresAt: hit.application_deadline
+        ? new Date(hit.application_deadline)
+        : null,
+      company: {
+        id: hit.employer?.id || null,
+        companyName: hit.employer?.name || hit.employer?.workplace || "Unknown",
+        email: null,
+        description: null,
+        country: hit.workplace_address?.country || null,
+        logoUrl: null,
+      },
+      employmentType: hit.employment_type?.label || null,
+      salaryType: hit.salary_type?.label || null,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new AppError(`Error fetching job from bank: ${message}`, 500);
   }
 };

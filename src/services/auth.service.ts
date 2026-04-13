@@ -106,7 +106,7 @@ export const registerCompanyRecruiterService = async (
       email: data.email,
       companyName: data.companyName,
       password: hashedPassword,
-      organizationNumber: data.organizationNumber,
+      organizationNumber: Number(data.organizationNumber),
       phoneNumber: data.phoneNumber,
     },
     select: {
