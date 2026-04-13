@@ -141,6 +141,9 @@ export const createJobService = async (
       description: data.description,
       expiresAt: new Date(data.expiresAt),
       webpage_url: data.webpage_url,
+      country: data.country,
+      city: data.city,
+      category: data.category,
     },
   });
   if (!newJob) {

@@ -28,7 +28,7 @@ export const createApp = () => {
   app.use(cors(corsOptions));
   // cors middleware handles preflight requests
 
-  app.use(express.json());
+  app.use(express.json({ limit: "500kb" }));
 
   // job seeker routes
   app.use("/api/jobseekers", jobSeekerRoutes);
@@ -48,7 +48,7 @@ export const createApp = () => {
   app.use("/api/auth", authRoutes);
 
   // support routes
-  app.use("/api", supportRoutes);
+  app.use("/api/support", supportRoutes);
 
   // AI routes
   app.use("/api", aiRoutes);

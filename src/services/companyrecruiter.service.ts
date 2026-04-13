@@ -126,9 +126,7 @@ export const UpdateCompanyRecruiterByIdService = async (
       phoneNumber: data.phoneNumber,
       password: hashedPassword,
       description: data.description,
-      organizationNumber: data.organizationNumber
-        ? Number(data.organizationNumber)
-        : undefined,
+      organizationNumber: data.organizationNumber ?? undefined,
       logoUrl: data.logoUrl,
       city: data.city,
       country: data.country,

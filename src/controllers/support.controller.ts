@@ -1,25 +1,22 @@
-// src/controllers/supportTicket.controller.ts
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { SupportTicketService } from "../services/support.services.js";
 
 export class SupportTicketController {
-  static async submit(req: Request, res: Response) {
+  static async submit(req: Request, res: Response, next: NextFunction) {
     try {
-      const { firstname, lastname, email, message, sendAsEmail } = req.body;
-
-      if (!firstname || !lastname || !email || !message) {
-        return res.status(400).json({ error: "Missing fields" });
-      }
-
+      // req.body är redan validerad av din Zod-middleware här
       const result = await SupportTicketService.createTicket(
-        { firstname, lastname, email, message },
-        sendAsEmail,
+        req.body,
+        req.body.sendAsEmail,
       );
 
-      res.json(result);
+      res.status(201).json({
+        status: "success",
+        message: "Support ticket created successfully",
+        data: result,
+      });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Internal server error" });
+      next(err); // Skickar fel (t.ex. dubblett-felet) till din globala error handler
     }
   }
 }
