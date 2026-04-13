@@ -5,6 +5,7 @@ import {
   getAllReceivedMessagesService,
 } from "../services/messages.service.js";
 import { AppError } from "../utils/app.error.js";
+import { userSocketMap } from "../server.js";
 
 export const sendMessage = async (
   req: Request,
@@ -30,6 +31,21 @@ export const sendMessage = async (
 
     const message = await sendMessageService(senderId, senderRole, req.body);
 
+    const searchKey = `${req.body.receiverRole}:${req.body.receiverId}`;
+    console.log(`Trying to find socket for user ID`, searchKey);
+    console.log(`Current users online:`, Array.from(userSocketMap.entries()));
+
+    const receiverSocketId = userSocketMap.get(searchKey);
+
+    if (receiverSocketId) {
+      const io = req.app.get("io");
+      io.to(receiverSocketId).emit("newMessage", message);
+      console.log("Match found! Message sent via Websockets");
+    } else {
+      console.log(
+        `User ID ${searchKey} is not currently connected via WebSockets`,
+      );
+    }
     res.status(201).json({ status: "success", data: message });
   } catch (error) {
     next(error);
