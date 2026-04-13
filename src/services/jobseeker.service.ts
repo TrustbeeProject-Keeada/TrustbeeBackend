@@ -145,7 +145,26 @@ export const updateJobSeekerByIdService = async (
       profilePicture: profilePictureBuffer,
     },
   });
-  return updatedJobSeeker;
+
+  let cvBase64: string | null = null;
+  if (updatedJobSeeker.cv) {
+    const base64Content = Buffer.from(updatedJobSeeker.cv).toString("base64");
+    cvBase64 = `data:application/pdf;base64,${base64Content}`;
+  }
+
+  let profilePictureBase64: string | null = null;
+  if (updatedJobSeeker.profilePicture) {
+    const base64Content = Buffer.from(updatedJobSeeker.profilePicture).toString(
+      "base64",
+    );
+    profilePictureBase64 = `data:image/jpeg;base64,${base64Content}`;
+  }
+
+  return {
+    ...updatedJobSeeker,
+    cv: cvBase64,
+    profilePicture: profilePictureBase64,
+  };
 };
 
 export const deleteJobSeekerByIdService = async (jobseekerId: number) => {

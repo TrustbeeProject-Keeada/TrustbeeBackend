@@ -36,7 +36,7 @@ TASK: Evaluate the job-to-candidate match and respond ONLY with the JSON structu
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-lite-001",
+    model: "gemini-3.1-flash-lite-preview",
     contents: [
       {
         role: "user",
@@ -49,7 +49,22 @@ TASK: Evaluate the job-to-candidate match and respond ONLY with the JSON structu
     ],
   });
 
-  return response.text;
+  // Extract JSON from the response, handling markdown code blocks
+  const responseText = response.text || "";
+  const jsonMatch =
+    responseText.match(/```json\n?([\s\S]*?)\n?```/) ||
+    responseText.match(/```\n?([\s\S]*?)\n?```/);
+
+  const jsonString = jsonMatch?.[1] || responseText;
+
+  try {
+    // Parse and return as an object to ensure it's valid JSON
+    return JSON.parse(jsonString.trim());
+  } catch (error) {
+    console.error("Failed to parse JSON from AI response:", error);
+    console.error("Raw response:", responseText);
+    throw new Error("AI response was not valid JSON");
+  }
 }
 
 export async function getJobMatchingData(recipientId: number, jobAdId: number) {
