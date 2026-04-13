@@ -20,14 +20,9 @@ export const ipLimiter = rateLimit({
 export const emailLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minuter
   max: 3, // Varje specifik e-postadress får bara skicka 3 ärenden
-  keyGenerator: (req: Request) => {
-    // Sortera på e-post (om det finns), annars fallback på IP.
-    // Use express-rate-limit's ipKeyGenerator to handle IPv6 addresses safely.
-    const email = req.body?.email;
-    if (email) {
-      return email;
-    }
-    return ipKeyGenerator(req.ip || "");
+  keyGenerator: (req: Request, res: Response) => {
+    // LÖSNINGEN: Skicka in req.ip (en sträng) istället för hela req-objektet!
+    return req.body.email || ipKeyGenerator(req.ip || "");
   },
   handler: (req: Request, res: Response) => {
     res.status(429).json({
