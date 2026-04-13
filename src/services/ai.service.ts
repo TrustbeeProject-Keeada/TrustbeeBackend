@@ -58,12 +58,72 @@ const fetchJobById = async (jobId: number, source?: "database" | "jobbank") => {
       if (response.ok) {
         const hit = await response.json();
         console.log(`✅ Found job ${jobId} in job bank`);
+        
+        // Debug: log the raw response structure
+        console.log(`🔍 Job bank response keys:`, Object.keys(hit).slice(0, 20));
+        if (hit.description) console.log(`📝 description type:`, typeof hit.description, `length:`, String(hit.description).length);
 
         if (hit && hit.id) {
+          // Build description from all available fields
+          const descriptionParts: string[] = [];
+
+          // Helper function to safely convert to string
+          const toString = (value: any): string | null => {
+            if (!value) return null;
+            if (typeof value === "string") return value;
+            if (typeof value === "object" && value.label) return value.label;
+            if (typeof value === "object" && value.name) return value.name;
+            return String(value);
+          };
+
+          const titleStr = toString(hit.headline);
+          if (titleStr) descriptionParts.push(`Job Title: ${titleStr}`);
+          
+          if (hit.description)
+            descriptionParts.push(toString(hit.description) || "");
+          if (hit.job_description)
+            descriptionParts.push(toString(hit.job_description) || "");
+          if (hit.text)
+            descriptionParts.push(toString(hit.text) || "");
+          if (hit.occupation)
+            descriptionParts.push(`Occupation: ${toString(hit.occupation)}`);
+            
+          if (hit.working_hours_type) {
+            const wh = toString(hit.working_hours_type);
+            if (wh && wh !== "[object Object]") descriptionParts.push(`Working hours: ${wh}`);
+          }
+          if (hit.employment_type) {
+            const et = toString(hit.employment_type);
+            if (et && et !== "[object Object]") descriptionParts.push(`Employment type: ${et}`);
+          }
+          if (hit.salary_type) {
+            const st = toString(hit.salary_type);
+            if (st && st !== "[object Object]") descriptionParts.push(`Salary type: ${st}`);
+          }
+          if (hit.application_details)
+            descriptionParts.push(toString(hit.application_details) || "");
+          if (hit.terms_of_employment) {
+            const toe = toString(hit.terms_of_employment);
+            if (toe && toe !== "[object Object]") descriptionParts.push(`Terms: ${toe}`);
+          }
+          if (hit.working_place)
+            descriptionParts.push(`Location: ${toString(hit.working_place)}`);
+          if (hit.workplace_address)
+            descriptionParts.push(`Address: ${toString(hit.workplace_address)}`);
+
+          const fullDescription =
+            descriptionParts.filter((p) => p && p.length > 0 && p !== "[object Object]").join("\n\n") ||
+            "No description available";
+
+          console.log(
+            `📝 Job description built (length: ${fullDescription.length})`,
+          );
+          console.log(`📝 First 300 chars: ${fullDescription.substring(0, 300)}`);
+
           return {
             id: hit.id,
-            title: hit.headline,
-            description: hit.description || "",
+            title: titleStr || "",
+            description: fullDescription,
             source: "jobbank" as const,
           };
         }
@@ -114,8 +174,31 @@ export const MatchMakingService = async (
       throw new AppError("Failed to extract text from CV", 400);
     }
 
+    // DEBUG: Log what's being sent to AI
+    console.log("\n═══ MATCHMAKING DEBUG ═══");
+    console.log(`📋 Job ID: ${jobAdd.id}`);
+    console.log(`📋 Job Title: ${jobAdd.title}`);
+    const descLength = jobAdd.description
+      ? String(jobAdd.description).length
+      : 0;
+    const descPreview = jobAdd.description
+      ? String(jobAdd.description).substring(0, 200)
+      : "[NO DESCRIPTION]";
+    console.log(`📋 Job Description (${descLength} chars): ${descPreview}...`);
+    console.log(`👤 Job Seeker ID: ${jobseeker.id}`);
+    const cvLength = cvText ? cvText.length : 0;
+    const cvPreview = cvText ? cvText.substring(0, 200) : "[NO CV TEXT]";
+    console.log(`📄 CV Text (${cvLength} chars): ${cvPreview}...`);
+    console.log("═══════════════════════\n");
+
+    // Ensure description is a string
+    const jobDescription = String(jobAdd.description || "");
+    if (!jobDescription || jobDescription.length === 0) {
+      throw new AppError("Job description is empty or missing", 400);
+    }
+
     // Evaluate the match
-    const MatchData = await evaluateJobMatch(jobAdd.description, cvText);
+    const MatchData = await evaluateJobMatch(jobDescription, cvText);
 
     return MatchData;
   } catch (error) {
@@ -125,9 +208,6 @@ export const MatchMakingService = async (
       throw error;
     }
 
-    throw new AppError(
-      `Error occurred while matching jobs`,
-      500,
-    );
+    throw new AppError(`Error occurred while matching jobs`, 500);
   }
 };
