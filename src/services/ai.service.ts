@@ -58,16 +58,28 @@ const fetchJobById = async (jobId: number, source?: "database" | "jobbank") => {
       if (response.ok) {
         const hit = await response.json();
         console.log(`✅ Found job ${jobId} in job bank`);
-        
+
         // Debug: log the raw response structure
-        console.log(`🔍 Job bank response keys:`, Object.keys(hit).slice(0, 20));
+        console.log(
+          `🔍 Job bank response keys:`,
+          Object.keys(hit).slice(0, 20),
+        );
         if (hit.description) {
           console.log(`📝 description type:`, typeof hit.description);
           if (typeof hit.description === "object") {
-            console.log(`📝 description keys:`, Object.keys(hit.description).slice(0, 10));
-            console.log(`📝 description content:`, JSON.stringify(hit.description).substring(0, 200));
+            console.log(
+              `📝 description keys:`,
+              Object.keys(hit.description).slice(0, 10),
+            );
+            console.log(
+              `📝 description content:`,
+              JSON.stringify(hit.description).substring(0, 200),
+            );
           } else {
-            console.log(`📝 description length:`, String(hit.description).length);
+            console.log(
+              `📝 description length:`,
+              String(hit.description).length,
+            );
           }
         }
 
@@ -76,7 +88,10 @@ const fetchJobById = async (jobId: number, source?: "database" | "jobbank") => {
           const descriptionParts: string[] = [];
 
           // Helper function to safely convert to string
-          const toString = (value: any, maxLength: number = 500): string | null => {
+          const toString = (
+            value: any,
+            maxLength: number = 500,
+          ): string | null => {
             if (!value) return null;
             if (typeof value === "string") return value;
             if (typeof value === "object") {
@@ -84,12 +99,17 @@ const fetchJobById = async (jobId: number, source?: "database" | "jobbank") => {
               if (value.text) return String(value.text).substring(0, maxLength);
               if (value.label) return String(value.label);
               if (value.name) return String(value.name);
-              if (value.description) return String(value.description).substring(0, maxLength);
+              if (value.description)
+                return String(value.description).substring(0, maxLength);
               if (value.value) return String(value.value);
-              if (value.content) return String(value.content).substring(0, maxLength);
+              if (value.content)
+                return String(value.content).substring(0, maxLength);
               // If it's an array of objects with text, join them
               if (Array.isArray(value)) {
-                return value.map(v => toString(v, 100)).filter(v => v).join(" ");
+                return value
+                  .map((v) => toString(v, 100))
+                  .filter((v) => v)
+                  .join(" ");
               }
               // Last resort: return empty (don't use [object Object])
               return null;
@@ -99,47 +119,55 @@ const fetchJobById = async (jobId: number, source?: "database" | "jobbank") => {
 
           const titleStr = toString(hit.headline);
           if (titleStr) descriptionParts.push(`Job Title: ${titleStr}`);
-          
+
           if (hit.description)
             descriptionParts.push(toString(hit.description) || "");
           if (hit.job_description)
             descriptionParts.push(toString(hit.job_description) || "");
-          if (hit.text)
-            descriptionParts.push(toString(hit.text) || "");
+          if (hit.text) descriptionParts.push(toString(hit.text) || "");
           if (hit.occupation)
             descriptionParts.push(`Occupation: ${toString(hit.occupation)}`);
-            
+
           if (hit.working_hours_type) {
             const wh = toString(hit.working_hours_type);
-            if (wh && wh !== "[object Object]") descriptionParts.push(`Working hours: ${wh}`);
+            if (wh && wh !== "[object Object]")
+              descriptionParts.push(`Working hours: ${wh}`);
           }
           if (hit.employment_type) {
             const et = toString(hit.employment_type);
-            if (et && et !== "[object Object]") descriptionParts.push(`Employment type: ${et}`);
+            if (et && et !== "[object Object]")
+              descriptionParts.push(`Employment type: ${et}`);
           }
           if (hit.salary_type) {
             const st = toString(hit.salary_type);
-            if (st && st !== "[object Object]") descriptionParts.push(`Salary type: ${st}`);
+            if (st && st !== "[object Object]")
+              descriptionParts.push(`Salary type: ${st}`);
           }
           if (hit.application_details)
             descriptionParts.push(toString(hit.application_details) || "");
           if (hit.terms_of_employment) {
             const toe = toString(hit.terms_of_employment);
-            if (toe && toe !== "[object Object]") descriptionParts.push(`Terms: ${toe}`);
+            if (toe && toe !== "[object Object]")
+              descriptionParts.push(`Terms: ${toe}`);
           }
           if (hit.working_place)
             descriptionParts.push(`Location: ${toString(hit.working_place)}`);
           if (hit.workplace_address)
-            descriptionParts.push(`Address: ${toString(hit.workplace_address)}`);
+            descriptionParts.push(
+              `Address: ${toString(hit.workplace_address)}`,
+            );
 
           const fullDescription =
-            descriptionParts.filter((p) => p && p.length > 0 && p !== "[object Object]").join("\n\n") ||
-            "No description available";
+            descriptionParts
+              .filter((p) => p && p.length > 0 && p !== "[object Object]")
+              .join("\n\n") || "No description available";
 
           console.log(
             `📝 Job description built (length: ${fullDescription.length})`,
           );
-          console.log(`📝 First 300 chars: ${fullDescription.substring(0, 300)}`);
+          console.log(
+            `📝 First 300 chars: ${fullDescription.substring(0, 300)}`,
+          );
 
           return {
             id: hit.id,
