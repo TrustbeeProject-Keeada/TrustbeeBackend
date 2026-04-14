@@ -80,8 +80,27 @@ export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
     },
   );
 
-  const { password, ...jobSeekerExcludingPassword } = jobSeeker;
-  return { ...jobSeekerExcludingPassword, token };
+  const { password, cv, profilePicture, ...jobSeekerExcludingPassword } =
+    jobSeeker;
+
+  let cvBase64: string | null = null;
+  if (cv) {
+    const base64Content = Buffer.from(cv).toString("base64");
+    cvBase64 = `data:application/pdf;base64,${base64Content}`;
+  }
+
+  let profilePictureBase64: string | null = null;
+  if (profilePicture) {
+    const base64Content = Buffer.from(profilePicture).toString("base64");
+    profilePictureBase64 = `data:image/jpeg;base64,${base64Content}`;
+  }
+
+  return {
+    ...jobSeekerExcludingPassword,
+    cv: cvBase64,
+    profilePicture: profilePictureBase64,
+    token,
+  };
 };
 
 export const registerCompanyRecruiterService = async (

@@ -19,9 +19,9 @@ import { protect, restrictTo } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.get("/", getAllJobs);
 router.get("/job_bank", getJobBank);
 router.get("/job_bank/:id", getJobBankById);
+router.get("/", getAllJobs);
 router.get("/:id", getJobById);
 router.post(
   "/",
