@@ -4,6 +4,7 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { prisma } from "../config/db.js";
+import type { CvStructure } from "../utils/pdf.builder.js";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.gemini_api_key,
@@ -36,7 +37,7 @@ TASK: Evaluate the job-to-candidate match and respond ONLY with the JSON structu
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3-flash-lite",
     contents: [
       {
         role: "user",
@@ -161,4 +162,167 @@ Please evaluate how well this candidate matches this job.`;
   });
   console.log(response.text);
   return response.text;
+}
+
+interface CvGenerationInput {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  skills: string[];
+  languages: string[];
+  bio: string;
+  portfolioLink?: string;
+  personalStatement?: string;
+}
+
+export async function generateCv(input: CvGenerationInput): Promise<string> {
+  const cvGenerationInstructions = readFileSync(
+    join(__dirname, "cv_generator.txt"),
+    "utf-8",
+  );
+
+  const userProfile = `
+Name: ${input.name}
+Email: ${input.email}
+Phone: ${input.phoneNumber}
+Bio: ${input.bio}
+Skills: ${input.skills.join(", ")}
+Languages: ${input.languages.join(", ")}
+${input.portfolioLink ? `Portfolio: ${input.portfolioLink}` : ""}
+${input.personalStatement ? `Personal Statement: ${input.personalStatement}` : ""}
+  `.trim();
+
+  const prompt = `${cvGenerationInstructions}
+
+---USER PROFILE---
+${userProfile}
+
+TASK: Generate a professional CV for this user based on their information above. Output ONLY the CV in a clean, professional format.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-lite",
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: prompt,
+          },
+        ],
+      },
+    ],
+  });
+
+  const generatedCv = response.text || "";
+
+  if (!generatedCv || generatedCv.trim().length === 0) {
+    throw new Error("Failed to generate CV from AI response");
+  }
+
+  return generatedCv;
+}
+
+export async function generateCvStructured(
+  input: CvGenerationInput,
+): Promise<CvStructure> {
+  const cvGenerationInstructions = readFileSync(
+    join(__dirname, "cv_generator.txt"),
+    "utf-8",
+  );
+
+  const userProfile = `
+Name: ${input.name}
+Email: ${input.email}
+Phone: ${input.phoneNumber}
+Bio: ${input.bio}
+Skills: ${input.skills.join(", ")}
+Languages: ${input.languages.join(", ")}
+${input.portfolioLink ? `Portfolio: ${input.portfolioLink}` : ""}
+${input.personalStatement ? `Personal Statement: ${input.personalStatement}` : ""}
+  `.trim();
+
+  const prompt = `${cvGenerationInstructions}
+
+---USER PROFILE---
+${userProfile}
+
+---JSON SCHEMA REQUIREMENT---
+You MUST return ONLY valid JSON (no markdown, no explanation) with this exact schema:
+{
+  "fullName": "string (full name)",
+  "contactInfo": {
+    "email": "string",
+    "phone": "string",
+    "location": "string or null"
+  },
+  "professionalSummary": "string (2-4 sentences, optional or null)",
+  "sections": [
+    {
+      "heading": "string (e.g., SKILLS, WORK EXPERIENCE, EDUCATION)",
+      "paragraphs": ["string"] or null,
+      "bullets": ["string"] or null
+    }
+  ],
+  "footer": "string or null"
+}
+
+INSTRUCTIONS:
+1. Parse all information from the user profile above
+2. Create a professional CV structure that matches the schema exactly
+3. Include sections like: SKILLS, LANGUAGES, PROFESSIONAL SUMMARY (if applicable)
+4. Format work experience and education as bullet points if available
+5. Return ONLY the JSON object, nothing else
+6. Do NOT include markdown formatting or explanations
+7. Ensure all strings are properly escaped
+
+TASK: Generate a structured CV JSON for this user.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-lite",
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: prompt,
+          },
+        ],
+      },
+    ],
+  });
+
+  let jsonText = response.text || "";
+
+  // Clean up response - remove markdown fences if present
+  jsonText = jsonText
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
+
+  if (!jsonText) {
+    throw new Error("Failed to generate CV structure from AI response");
+  }
+
+  try {
+    const cvStructure = JSON.parse(jsonText) as CvStructure;
+
+    // Validate structure
+    if (
+      !cvStructure.fullName ||
+      !cvStructure.contactInfo ||
+      !cvStructure.contactInfo.email ||
+      !cvStructure.contactInfo.phone
+    ) {
+      throw new Error("Invalid CV structure: missing required fields");
+    }
+
+    return cvStructure;
+  } catch (error) {
+    console.error("Failed to parse CV structure JSON:", jsonText);
+    throw new Error(
+      `Failed to parse CV structure: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
 }

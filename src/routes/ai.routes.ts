@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { api_health } from "../ai_implementation/ai_instance.js";
-import { MatchMakingController } from "../controllers/ai.controller.js";
+import {
+  MatchMakingController,
+  GenerateCvController,
+  GenerateCvPdfController,
+} from "../controllers/ai.controller.js";
 
 const router = Router();
 
@@ -10,5 +14,9 @@ router.get("/api_health", async (req, res) => {
 });
 
 router.post("/matchmake", MatchMakingController);
+
+router.post("/generate-cv/:jobseekerId", GenerateCvController);
+
+router.post("/generate-cv-pdf/:jobseekerId", GenerateCvPdfController);
 
 export default router;

@@ -1,6 +1,11 @@
 import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
-import { evaluateJobMatch } from "../ai_implementation/ai_instance.js";
+import {
+  evaluateJobMatch,
+  generateCv,
+  generateCvStructured,
+} from "../ai_implementation/ai_instance.js";
+import { buildCvPdf } from "../utils/pdf.builder.js";
 
 // Lazily import pdf-parse at runtime and accept either Buffer or Uint8Array
 const extractCvText = async (buffer: Buffer | Uint8Array): Promise<string> => {
@@ -258,5 +263,215 @@ export const MatchMakingService = async (
     }
 
     throw new AppError(`Error occurred while matching jobs`, 500);
+  }
+};
+
+export const GenerateCvService = async (jobSeekerId: number) => {
+  try {
+    // Fetch the job seeker from database
+    const jobSeeker = await prisma.jobSeeker.findUnique({
+      where: { id: jobSeekerId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        skills: true,
+        languages: true,
+        bio: true,
+        portfolioLink: true,
+        personalStatement: true,
+      },
+    });
+
+    if (!jobSeeker) {
+      throw new AppError("Job Seeker not found", 404);
+    }
+
+    // Validate required fields
+    if (
+      !jobSeeker.firstName ||
+      !jobSeeker.lastName ||
+      !jobSeeker.email ||
+      !jobSeeker.phoneNumber
+    ) {
+      throw new AppError(
+        "Job Seeker profile is incomplete. Name, email, and phone number are required.",
+        400,
+      );
+    }
+
+    if (!jobSeeker.skills || jobSeeker.skills.length === 0) {
+      throw new AppError(
+        "Job Seeker must have at least one skill to generate a CV",
+        400,
+      );
+    }
+
+    // Prepare CV generation input
+    const cvInput = {
+      name: `${jobSeeker.firstName} ${jobSeeker.lastName}`,
+      email: jobSeeker.email,
+      phoneNumber: jobSeeker.phoneNumber,
+      skills: jobSeeker.skills || [],
+      languages: jobSeeker.languages || [],
+      bio: jobSeeker.bio || "Motivated professional seeking new opportunities",
+      portfolioLink: jobSeeker.portfolioLink || undefined,
+      personalStatement: jobSeeker.personalStatement || undefined,
+    };
+
+    // Generate CV using AI
+    const generatedCvText = await generateCv(cvInput);
+
+    if (!generatedCvText || generatedCvText.trim().length === 0) {
+      throw new AppError("Failed to generate CV", 500);
+    }
+
+    // DEBUG: Log CV generation
+    console.log("\n═══ CV GENERATION DEBUG ═══");
+    console.log(`✅ Generated CV for Job Seeker ID: ${jobSeekerId}`);
+    console.log(`📄 CV Length: ${generatedCvText.length} characters`);
+    console.log(
+      `📄 Preview (first 300 chars): ${generatedCvText.substring(0, 300)}...`,
+    );
+    console.log("═══════════════════════\n");
+
+    return {
+      success: true,
+      jobSeekerId,
+      cv: generatedCvText,
+      generatedAt: new Date(),
+    };
+  } catch (error) {
+    console.error("CV generation error:", error);
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError(`Error occurred while generating CV`, 500);
+  }
+};
+
+export const GenerateCvPdfService = async (jobSeekerId: number) => {
+  try {
+    // Fetch the job seeker from database
+    const jobSeeker = await prisma.jobSeeker.findUnique({
+      where: { id: jobSeekerId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        skills: true,
+        languages: true,
+        bio: true,
+        portfolioLink: true,
+        personalStatement: true,
+      },
+    });
+
+    if (!jobSeeker) {
+      throw new AppError("Job Seeker not found", 404);
+    }
+
+    // Validate required fields
+    if (
+      !jobSeeker.firstName ||
+      !jobSeeker.lastName ||
+      !jobSeeker.email ||
+      !jobSeeker.phoneNumber
+    ) {
+      throw new AppError(
+        "Job Seeker profile is incomplete. Name, email, and phone number are required.",
+        400,
+      );
+    }
+
+    if (!jobSeeker.skills || jobSeeker.skills.length === 0) {
+      throw new AppError(
+        "Job Seeker must have at least one skill to generate a CV",
+        400,
+      );
+    }
+
+    // Prepare CV generation input
+    const cvInput = {
+      name: `${jobSeeker.firstName} ${jobSeeker.lastName}`,
+      email: jobSeeker.email,
+      phoneNumber: jobSeeker.phoneNumber,
+      skills: jobSeeker.skills || [],
+      languages: jobSeeker.languages || [],
+      bio: jobSeeker.bio || "Motivated professional seeking new opportunities",
+      portfolioLink: jobSeeker.portfolioLink || undefined,
+      personalStatement: jobSeeker.personalStatement || undefined,
+    };
+
+    // Generate structured CV from AI
+    const cvStructure = await generateCvStructured(cvInput);
+
+    if (!cvStructure) {
+      throw new AppError("Failed to generate CV structure", 500);
+    }
+
+    // Build PDF and get as Buffer
+    const pdfBuffer = await buildCvPdf(cvStructure);
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new AppError("Failed to generate PDF buffer", 500);
+    }
+
+    // Convert Buffer to Uint8Array for Prisma
+    const pdfBytes = new Uint8Array(pdfBuffer);
+
+    // Save PDF to database
+    const updatedJobSeeker = await prisma.jobSeeker.update({
+      where: { id: jobSeekerId },
+      data: {
+        cv: pdfBytes,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        cv: true,
+        updatedAt: true,
+      },
+    });
+
+    // DEBUG: Log CV PDF generation
+    console.log("\n═══ CV PDF GENERATION DEBUG ═══");
+    console.log(`✅ Generated CV PDF for Job Seeker ID: ${jobSeekerId}`);
+    console.log(`📄 PDF Buffer Size: ${pdfBuffer.length} bytes`);
+    console.log(
+      `� Saved to database for user: ${jobSeeker.firstName} ${jobSeeker.lastName}`,
+    );
+    console.log(`⏰ Updated at: ${updatedJobSeeker.updatedAt}`);
+    console.log("═════════════════════════════════\n");
+
+    return {
+      success: true,
+      jobSeekerId,
+      firstName: updatedJobSeeker.firstName,
+      lastName: updatedJobSeeker.lastName,
+      email: updatedJobSeeker.email,
+      pdfSizeBytes: pdfBuffer.length,
+      savedAt: updatedJobSeeker.updatedAt,
+      message: "CV PDF generated and saved to database successfully",
+    };
+  } catch (error) {
+    console.error("CV PDF generation error:", error);
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError(
+      `Error occurred while generating CV PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      500,
+    );
   }
 };
