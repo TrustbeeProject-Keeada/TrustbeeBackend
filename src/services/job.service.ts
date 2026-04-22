@@ -337,6 +337,9 @@ export const getJobBankService = async (
       },
     };
   } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
     const message = error instanceof Error ? error.message : String(error);
     throw new AppError(`Error fetching job bank data: ${message}`, 500);
   }
@@ -386,6 +389,9 @@ export const getBankJobByIdService = async (jobId: number) => {
       salaryType: hit.salary_type?.label || null,
     };
   } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
     const message = error instanceof Error ? error.message : String(error);
     throw new AppError(`Error fetching job from bank: ${message}`, 500);
   }
