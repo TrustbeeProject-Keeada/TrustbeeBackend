@@ -9,9 +9,9 @@ export const ipLimiter = rateLimit({
   legacyHeaders: false,
   handler: (req: Request, res: Response) => {
     res.status(429).json({
-      status: "fail",
+      status: "Unsuccessful",
       message:
-        "Misstänkt aktivitet från detta nätverk. Försök igen om 15 minuter.",
+        "You have sent too many support tickets from this IP address. Please try again in 15 minutes.",
     });
   },
 });
@@ -26,9 +26,9 @@ export const emailLimiter = rateLimit({
   },
   handler: (req: Request, res: Response) => {
     res.status(429).json({
-      status: "fail",
+      status: "Unsuccessful",
       message:
-        "Du har skickat för många ärenden från denna e-postadress. Försök igen om 15 minuter.",
+        "You have sent too many support tickets from this email address. Please try again in 15 minutes.",
     });
   },
 });
