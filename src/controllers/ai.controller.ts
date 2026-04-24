@@ -53,13 +53,25 @@ export const GenerateCvPdfController = async (
   next: NextFunction,
 ) => {
   try {
-    const jobseekerId = req.params.jobseekerId || req.body.jobseekerId;
+    // Accept either a path param jobseekerId (legacy / DB-save flow)
+    // or a full request body containing CV/profile data (purely generate-from-request flow).
+    const jobseekerIdParam = req.params.jobseekerId
+      ? Number(req.params.jobseekerId)
+      : undefined;
 
-    if (!jobseekerId) {
-      return next(new AppError("Job Seeker ID is required", 400));
+    const requestData = Object.keys(req.body || {}).length
+      ? req.body
+      : undefined;
+
+    if (!jobseekerIdParam && !requestData) {
+      return next(
+        new AppError("Job Seeker ID or request body data is required", 400),
+      );
     }
 
-    const pdfData = await GenerateCvPdfService(Number(jobseekerId));
+    // If requestData is provided, prefer generating from that. If jobseekerIdParam is provided
+    // and requestData is absent, use the DB-backed generation and save behaviour.
+    const pdfData = await GenerateCvPdfService(jobseekerIdParam, requestData);
     res.status(200).json({ status: "success", data: pdfData });
   } catch (error) {
     next(error);

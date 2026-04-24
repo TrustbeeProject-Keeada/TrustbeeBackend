@@ -10,6 +10,10 @@ const ai = new GoogleGenAI({
   apiKey: process.env.gemini_api_key,
 });
 
+// Allow overriding model via env. Fallback to a broadly used model expected to be
+// available on many GenAI accounts. If your account uses a different model,
+// set GENAI_MODEL in env (e.g. "gemini-2.5-flash-lite").
+const DEFAULT_GENAI_MODEL = process.env.GENAI_MODEL || "gemini-2.5-flash-lite";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -37,7 +41,7 @@ TASK: Evaluate the job-to-candidate match and respond ONLY with the JSON structu
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-lite",
+    model: DEFAULT_GENAI_MODEL,
     contents: [
       {
         role: "user",
@@ -118,7 +122,7 @@ export async function getJobMatchingData(recipientId: number, jobAdId: number) {
 
 export async function api_health() {
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: DEFAULT_GENAI_MODEL,
     contents: [
       {
         role: "user",
@@ -147,7 +151,7 @@ ${job_description}
 Please evaluate how well this candidate matches this job.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+    model: DEFAULT_GENAI_MODEL,
     contents: [
       {
         role: "user",
@@ -201,7 +205,7 @@ TASK: Generate a professional CV for this user based on their information above.
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+    model: DEFAULT_GENAI_MODEL,
     contents: [
       {
         role: "user",

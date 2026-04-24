@@ -354,9 +354,128 @@ export const GenerateCvService = async (jobSeekerId: number) => {
   }
 };
 
-export const GenerateCvPdfService = async (jobSeekerId: number) => {
+export const GenerateCvPdfService = async (
+  jobSeekerId?: number,
+  requestData?: any,
+) => {
   try {
-    // Fetch the job seeker from database
+    // Helper: build a normalized cvInput from either DB record or incoming request data
+    const buildCvInputFromRequest = (data: any) => {
+      const snapshot = data.formSnapshot || data;
+      const personal = snapshot.personal || data.personal || {};
+
+      const firstName =
+        personal.firstName || data.firstName || snapshot.firstName;
+      const lastName = personal.lastName || data.lastName || snapshot.lastName;
+      const email = personal.email || data.email || snapshot.email;
+      const phoneNumber =
+        personal.phone || personal.phoneNumber || data.phone || snapshot.phone;
+      const skills = snapshot.skills || data.skills || [];
+      const languages = snapshot.languages || data.languages || [];
+      const bio =
+        snapshot.summary ||
+        snapshot.bio ||
+        data.summary ||
+        data.bio ||
+        "Motivated professional seeking new opportunities";
+      const portfolioLink = snapshot.portfolioLink || data.portfolioLink;
+      const personalStatement =
+        snapshot.personalStatement || data.personalStatement;
+
+      const name = `${firstName || ""} ${lastName || ""}`.trim();
+
+      return {
+        name,
+        email,
+        phoneNumber,
+        skills,
+        languages,
+        bio,
+        portfolioLink,
+        personalStatement,
+      };
+    };
+
+    // If requestData is provided, use it to generate CV (optionally save if jobSeekerId also present)
+    if (requestData) {
+      const cvInput = buildCvInputFromRequest(requestData);
+
+      // Validate required fields (same requirements as DB flow)
+      if (!cvInput.name || !cvInput.email || !cvInput.phoneNumber) {
+        throw new AppError(
+          "Profile is incomplete. Name, email, and phone number are required.",
+          400,
+        );
+      }
+
+      if (!cvInput.skills || cvInput.skills.length === 0) {
+        throw new AppError(
+          "At least one skill is required to generate a CV",
+          400,
+        );
+      }
+
+      // Generate structured CV from AI
+      const cvStructure = await generateCvStructured(cvInput);
+
+      if (!cvStructure) {
+        throw new AppError("Failed to generate CV structure", 500);
+      }
+
+      // Build PDF and get as Buffer
+      const pdfBuffer = await buildCvPdf(cvStructure);
+
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        throw new AppError("Failed to generate PDF buffer", 500);
+      }
+
+      // If jobSeekerId is provided, save to DB; otherwise just return base64 buffer
+      if (jobSeekerId) {
+        const pdfBytes = new Uint8Array(pdfBuffer);
+
+        const updatedJobSeeker = await prisma.jobSeeker.update({
+          where: { id: jobSeekerId },
+          data: { cv: pdfBytes },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            cv: true,
+            updatedAt: true,
+          },
+        });
+
+        return {
+          success: true,
+          jobSeekerId,
+          firstName: updatedJobSeeker.firstName,
+          lastName: updatedJobSeeker.lastName,
+          email: updatedJobSeeker.email,
+          pdfSizeBytes: pdfBuffer.length,
+          savedAt: updatedJobSeeker.updatedAt,
+          message: "CV PDF generated and saved to database successfully",
+        };
+      }
+
+      // Return base64 PDF for immediate download/use by frontend
+      const base64 = Buffer.from(pdfBuffer).toString("base64");
+      const dataUrl = `data:application/pdf;base64,${base64}`;
+
+      return {
+        success: true,
+        pdfBase64: dataUrl,
+        pdfSizeBytes: pdfBuffer.length,
+        generatedAt: new Date(),
+        message: "CV PDF generated successfully (not saved)",
+      };
+    }
+
+    // --- Legacy / DB-backed flow: fetch the job seeker from database by id ---
+    if (!jobSeekerId) {
+      throw new AppError("Job Seeker ID is required", 400);
+    }
+
     const jobSeeker = await prisma.jobSeeker.findUnique({
       where: { id: jobSeekerId },
       select: {
@@ -470,7 +589,9 @@ export const GenerateCvPdfService = async (jobSeekerId: number) => {
     }
 
     throw new AppError(
-      `Error occurred while generating CV PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Error occurred while generating CV PDF: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
       500,
     );
   }
