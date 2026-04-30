@@ -345,7 +345,7 @@ export const getJobBankService = async (
   }
 };
 
-export const getBankJobByIdService = async (jobId: number) => {
+export const getBankJobByIdService = async (jobId: string | number) => {
   try {
     const url = `https://jobsearch.api.jobtechdev.se/ad/${jobId}`;
     const response = await fetch(url);

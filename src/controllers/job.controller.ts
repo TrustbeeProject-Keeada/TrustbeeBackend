@@ -207,13 +207,11 @@ export const getJobBankById = async (
 ) => {
   try {
     const id = req.params.id as string;
-    const idInt = Number(id);
-
-    if (!Number.isInteger(idInt) || idInt <= 0) {
+    if (!id || id.trim().length === 0) {
       return res.status(400).json({ message: "Invalid job id" });
     }
 
-    const job = await getBankJobByIdService(idInt);
+    const job = await getBankJobByIdService(id);
     res.status(200).json(job);
   } catch (error) {
     next(error);

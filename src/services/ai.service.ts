@@ -353,7 +353,7 @@ export const GenerateCvService = async (jobSeekerId: number) => {
     throw new AppError(`Error occurred while generating CV`, 500);
   }
 };
-
+ 
 export const GenerateCvPdfService = async (
   jobSeekerId?: number,
   requestData?: any,

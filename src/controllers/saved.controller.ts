@@ -16,12 +16,21 @@ export const saveJob = async (
   next: NextFunction,
 ) => {
   try {
-    const jobId = Number(req.params.jobId);
+    const jobId = req.params.jobId as string;
+    const source = (req.query.source as string) || (req.body?.source as string);
     const userId = req.user?.id;
 
     if (!userId) return next(new AppError("Unauthorized", 401));
 
-    await saveJobService(userId, jobId);
+    await saveJobService(
+      userId,
+      jobId,
+      source === "jobbank"
+        ? "jobbank"
+        : source === "database"
+          ? "database"
+          : undefined,
+    );
     res
       .status(201)
       .json({ status: "success", message: "Job saved successfully" });
@@ -36,12 +45,21 @@ export const unsaveJob = async (
   next: NextFunction,
 ) => {
   try {
-    const jobId = Number(req.params.jobId);
+    const jobId = req.params.jobId as string;
+    const source = (req.query.source as string) || (req.body?.source as string);
     const userId = req.user?.id;
 
     if (!userId) return next(new AppError("Unauthorized", 401));
 
-    await unsaveJobService(userId, jobId);
+    await unsaveJobService(
+      userId,
+      jobId,
+      source === "jobbank"
+        ? "jobbank"
+        : source === "database"
+          ? "database"
+          : undefined,
+    );
     res
       .status(200)
       .json({ status: "success", message: "Job removed from saved" });

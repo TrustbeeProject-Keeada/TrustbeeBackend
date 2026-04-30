@@ -46,6 +46,7 @@ export const getAllJobSeekersService = async (
       lastName: true,
       profilePicture: true,
       city: true,
+      country: true,
       languages: true,
       skills: true,
       bio: true,
@@ -76,13 +77,17 @@ export const getJobSeekerByIdService = async (id: number) => {
       id: true,
       firstName: true,
       lastName: true,
+      email: true,
+      phoneNumber: true,
       profilePicture: true,
       city: true,
+      country: true,
       languages: true,
       skills: true,
       bio: true,
       portfolioLink: true,
       cv: true,
+      personalStatement: true,
     },
   });
   if (!jobSeeker) {
@@ -96,7 +101,20 @@ export const getJobSeekerByIdService = async (id: number) => {
 
     cvBase64 = `data:application/pdf;base64,${base64Content}`;
   }
-  return { ...jobSeeker, cv: cvBase64 };
+
+  let profilePictureBase64: string | null = null;
+  if (jobSeeker.profilePicture) {
+    const base64Content = Buffer.from(jobSeeker.profilePicture).toString(
+      "base64",
+    );
+    profilePictureBase64 = `data:image/jpeg;base64,${base64Content}`;
+  }
+
+  return {
+    ...jobSeeker,
+    cv: cvBase64,
+    profilePicture: profilePictureBase64,
+  };
 };
 
 export const updateJobSeekerByIdService = async (
