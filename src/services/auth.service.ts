@@ -73,6 +73,7 @@ export const logInJobSeekerService = async (data: LogInJobSeekerTypeZ) => {
       id: jobSeeker.id,
       email: jobSeeker.email,
       role: jobSeeker.role,
+      firstName: jobSeeker.firstName,
     },
     jwtSecret,
     {

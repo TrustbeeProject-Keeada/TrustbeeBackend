@@ -3,6 +3,7 @@ import {
   applyForJob,
   getJobApplications,
   updateApplicationStatus,
+  applyOnWebsite,
 } from "../controllers/application.controller.js";
 import { protect, restrictTo } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
@@ -15,6 +16,9 @@ router.use(protect);
 
 // Job_Seeker: Ansök till ett jobb
 router.post("/job/:jobId", restrictTo("JOB_SEEKER"), applyForJob);
+
+// Job_Seeker: Apply on Website (Arbetsförmedlingen API)
+router.post("/website/:jobBankId", restrictTo("JOB_SEEKER"), applyOnWebsite);
 
 // Company_Recruiter: Se alla ansökningar för ett specifikt jobb
 router.get(

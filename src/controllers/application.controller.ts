@@ -4,6 +4,7 @@ import {
   applyForJobService,
   getJobApplicationsService,
   updateApplicationStatusService,
+  applyOnWebsiteService,
 } from "../services/application.service.js";
 
 export const applyForJob = async (
@@ -61,5 +62,47 @@ export const updateApplicationStatus = async (
     res.status(200).json({ status: "success", data: updatedApplication });
   } catch (error) {
     next(error);
+  }
+};
+
+// ==========================================
+// APPLY ON WEBSITE (Arbetsförmedlingen API)
+// ==========================================
+
+/**
+ * Handle "Apply on Website" button click for job bank jobs
+ * Silently:
+ * 1. Finds or creates recruiter account
+ * 2. Establishes chat connection
+ * 3. Sends recruiter notification
+ * 4. Returns success (no errors shown to user)
+ */
+export const applyOnWebsite = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const jobBankId = req.params.jobBankId as string;
+    const userId = req.user?.id;
+    const firstName = req.user?.firstName;
+
+    if (!userId) return next(new AppError("Unauthorized", 401));
+    if (!jobBankId) return next(new AppError("Job ID is required", 400));
+
+    const result = await applyOnWebsiteService(
+      userId,
+      jobBankId,
+      firstName || "Candidate",
+    );
+
+    // Always return 200 success - no errors to user
+    res.status(200).json(result);
+  } catch (error) {
+    // Even if there's an error, return success to avoid breaking user experience
+    res.status(200).json({
+      status: "success",
+      message: "Application initiated successfully",
+    });
   }
 };

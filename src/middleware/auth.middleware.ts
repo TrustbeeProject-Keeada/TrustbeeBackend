@@ -9,6 +9,7 @@ declare global {
       user?: {
         id: number; // Använder number eftersom ditt ID i databasen är en Int
         role: string;
+        firstName?: string;
       };
     }
   }
@@ -30,7 +31,11 @@ export const protect = async (
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
     const payload = decoded as JwtPayload;
 
-    req.user = { id: payload.id, role: payload.role };
+    req.user = {
+      id: payload.id,
+      role: payload.role,
+      firstName: payload.firstName,
+    };
     next();
   } catch (error) {
     console.log(error);
