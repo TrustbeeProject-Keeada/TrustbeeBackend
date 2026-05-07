@@ -6,9 +6,25 @@ import { fileURLToPath } from "url";
 import { prisma } from "../config/db.js";
 import type { CvStructure } from "../utils/pdf.builder.js";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.gemini_api_key,
-});
+let aiClient: GoogleGenAI | null = null;
+let cachedApiKey: string | null = null;
+
+const getGeminiClient = () => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.gemini_api_key;
+
+  if (!apiKey) {
+    throw new Error(
+      "GEMINI_API_KEY is required to use the Gemini API. Please set it in your .env file.",
+    );
+  }
+
+  if (!aiClient || cachedApiKey !== apiKey) {
+    cachedApiKey = apiKey;
+    aiClient = new GoogleGenAI({ apiKey });
+  }
+
+  return aiClient;
+};
 
 // Allow overriding model via env. Fallback to a broadly used model expected to be
 // available on many GenAI accounts. If your account uses a different model,
@@ -40,31 +56,21 @@ ${candidateProfileText}
 TASK: Evaluate the job-to-candidate match and respond ONLY with the JSON structure specified above.
   `;
 
-  const response = await ai.models.generateContent({
+  const response = await getGeminiClient().models.generateContent({
     model: DEFAULT_GENAI_MODEL,
     contents: [
       {
         role: "user",
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
+        parts: [{ text: prompt }],
       },
     ],
+    config: { responseMimeType: "application/json" },
   });
 
-  // Extract JSON from the response, handling markdown code blocks
   const responseText = response.text || "";
-  const jsonMatch =
-    responseText.match(/```json\n?([\s\S]*?)\n?```/) ||
-    responseText.match(/```\n?([\s\S]*?)\n?```/);
-
-  const jsonString = jsonMatch?.[1] || responseText;
 
   try {
-    // Parse and return as an object to ensure it's valid JSON
-    return JSON.parse(jsonString.trim());
+    return JSON.parse(responseText.trim());
   } catch (error) {
     console.error("Failed to parse JSON from AI response:", error);
     console.error("Raw response:", responseText);
@@ -121,7 +127,7 @@ export async function getJobMatchingData(recipientId: number, jobAdId: number) {
 }
 
 export async function api_health() {
-  const response = await ai.models.generateContent({
+  const response = await getGeminiClient().models.generateContent({
     model: DEFAULT_GENAI_MODEL,
     contents: [
       {
@@ -142,15 +148,8 @@ export async function job_matching_evaluation(userId: number, jobAdId: number) {
   const data = await getJobMatchingData(userId, jobAdId);
   const user_cv = `cv: ${data.jobSeeker.cv}`;
   const job_description = `job description: ${data.job.description}`;
-  const prompt = `${systemInstruction}
 
-${user_cv}
-
-${job_description}
-
-Please evaluate how well this candidate matches this job.`;
-
-  const response = await ai.models.generateContent({
+  const response = await getGeminiClient().models.generateContent({
     model: DEFAULT_GENAI_MODEL,
     contents: [
       {
@@ -169,14 +168,21 @@ Please evaluate how well this candidate matches this job.`;
 }
 
 interface CvGenerationInput {
-  name: string;
   email: string;
   phoneNumber: string;
+  location?: string;
   skills: string[];
   languages: string[];
   bio: string;
   portfolioLink?: string;
   personalStatement?: string;
+  workExperience?: unknown;
+  education?: unknown;
+  certifications?: unknown;
+  projects?: unknown;
+  awards?: unknown;
+  volunteering?: unknown;
+  interests?: unknown;
 }
 
 export async function generateCv(input: CvGenerationInput): Promise<string> {
@@ -186,14 +192,21 @@ export async function generateCv(input: CvGenerationInput): Promise<string> {
   );
 
   const userProfile = `
-Name: ${input.name}
 Email: ${input.email}
 Phone: ${input.phoneNumber}
+Location: ${input.location || ""}
 Bio: ${input.bio}
 Skills: ${input.skills.join(", ")}
 Languages: ${input.languages.join(", ")}
 ${input.portfolioLink ? `Portfolio: ${input.portfolioLink}` : ""}
 ${input.personalStatement ? `Personal Statement: ${input.personalStatement}` : ""}
+${input.workExperience ? `Work Experience: ${JSON.stringify(input.workExperience)}` : ""}
+${input.education ? `Education: ${JSON.stringify(input.education)}` : ""}
+${input.certifications ? `Certifications: ${JSON.stringify(input.certifications)}` : ""}
+${input.projects ? `Projects: ${JSON.stringify(input.projects)}` : ""}
+${input.awards ? `Awards: ${JSON.stringify(input.awards)}` : ""}
+${input.volunteering ? `Volunteering: ${JSON.stringify(input.volunteering)}` : ""}
+${input.interests ? `Interests: ${JSON.stringify(input.interests)}` : ""}
   `.trim();
 
   const prompt = `${cvGenerationInstructions}
@@ -204,7 +217,7 @@ ${userProfile}
 TASK: Generate a professional CV for this user based on their information above. Output ONLY the CV in a clean, professional format.
   `;
 
-  const response = await ai.models.generateContent({
+  const response = await getGeminiClient().models.generateContent({
     model: DEFAULT_GENAI_MODEL,
     contents: [
       {
@@ -236,14 +249,21 @@ export async function generateCvStructured(
   );
 
   const userProfile = `
-Name: ${input.name}
 Email: ${input.email}
 Phone: ${input.phoneNumber}
+Location: ${input.location || ""}
 Bio: ${input.bio}
 Skills: ${input.skills.join(", ")}
 Languages: ${input.languages.join(", ")}
 ${input.portfolioLink ? `Portfolio: ${input.portfolioLink}` : ""}
 ${input.personalStatement ? `Personal Statement: ${input.personalStatement}` : ""}
+${input.workExperience ? `Work Experience: ${JSON.stringify(input.workExperience)}` : ""}
+${input.education ? `Education: ${JSON.stringify(input.education)}` : ""}
+${input.certifications ? `Certifications: ${JSON.stringify(input.certifications)}` : ""}
+${input.projects ? `Projects: ${JSON.stringify(input.projects)}` : ""}
+${input.awards ? `Awards: ${JSON.stringify(input.awards)}` : ""}
+${input.volunteering ? `Volunteering: ${JSON.stringify(input.volunteering)}` : ""}
+${input.interests ? `Interests: ${JSON.stringify(input.interests)}` : ""}
   `.trim();
 
   const prompt = `${cvGenerationInstructions}
@@ -252,58 +272,71 @@ ${input.personalStatement ? `Personal Statement: ${input.personalStatement}` : "
 ${userProfile}
 
 ---JSON SCHEMA REQUIREMENT---
-You MUST return ONLY valid JSON (no markdown, no explanation) with this exact schema:
+Return ONLY valid JSON matching this schema exactly. No markdown, no explanation.
+
+RULES (read first):
+- Do NOT include any name in the output (no full name, no initials, no placeholders)
+- Use the email and phone EXACTLY as provided — do not reformat or correct them
+- Never invent dates, employers, projects, achievements, metrics, certifications, or responsibilities the user did not provide
+- You may rephrase and regroup content for clarity, and infer immediately-implied domain labels (e.g. SQL → Databases). Nothing beyond that.
+- Every bullet must start with a past-tense action verb. Never start with "Responsible for", "Helped with", or "Worked on"
+- If input is sparse, write fewer bullets rather than padding with generic ones
+
+SCHEMA:
 {
-  "fullName": "string (full name)",
+  "preferredFont": "Calibri" | "Georgia" | null,
+  "headline": string | null,
   "contactInfo": {
-    "email": "string",
-    "phone": "string",
-    "location": "string or null"
+    "email": string,
+    "phone": string,
+    "location": string | null
   },
-  "professionalSummary": "string (2-4 sentences, optional or null)",
+  "professionalSummary": string | null,
   "sections": [
     {
-      "heading": "string (e.g., SKILLS, WORK EXPERIENCE, EDUCATION)",
-      "paragraphs": ["string"] or null,
-      "bullets": ["string"] or null
+      "heading": string,
+      "paragraphs": [string] | null,
+      "bullets": [string] | null
     }
   ],
-  "footer": "string or null"
+  "footer": string | null
 }
+
+PARAGRAPH FORMAT for WORK EXPERIENCE and EDUCATION entries:
+Each entry is ONE string in the paragraphs array, using this exact layout:
+  "Job Title\nCompany Name, Location\n- Bullet 1\n- Bullet 2 | Date Range"
+
+Rules for this format:
+- First line = title/degree (rendered large, accent color)
+- Second line = organization name and location (rendered as subtitle)
+- Bullet lines starting with "- " follow immediately after
+- The text after " | " is the date range, right-aligned — put ONLY the date there, nothing else
+- Do NOT use the section-level "bullets" array for WORK EXPERIENCE or EDUCATION entries
+
+SECTION-LEVEL bullets (not paragraphs) are for: SKILLS, LANGUAGES, CERTIFICATIONS, and similar flat lists.
 
 INSTRUCTIONS:
 1. Parse all information from the user profile above
-2. Create a professional CV structure that matches the schema exactly
-3. Include sections like: SKILLS, LANGUAGES, PROFESSIONAL SUMMARY (if applicable)
-4. Format work experience and education as bullet points if available
-5. Return ONLY the JSON object, nothing else
-6. Do NOT include markdown formatting or explanations
-7. Ensure all strings are properly escaped
+2. Create a professional CV structure matching the schema
+3. Include sections as applicable: SKILLS, LANGUAGES, WORK EXPERIENCE, EDUCATION, PROJECTS, CERTIFICATIONS
+4. Only set "headline" if the user's role is unambiguous from their experience; otherwise null
+5. Only set "preferredFont" to Calibri or Georgia if it fits; otherwise null
 
 TASK: Generate a structured CV JSON for this user.
   `;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+  const response = await getGeminiClient().models.generateContent({
+    model: DEFAULT_GENAI_MODEL,
     contents: [
       {
         role: "user",
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
+        parts: [{ text: prompt }],
       },
     ],
+    config: { responseMimeType: "application/json" },
   });
 
-  let jsonText = response.text || "";
-
-  // Clean up response - remove markdown fences if present
-  jsonText = jsonText
-    .replace(/```json\n?/g, "")
-    .replace(/```\n?/g, "")
-    .trim();
+  const jsonText = (response.text || "").trim();
 
   if (!jsonText) {
     throw new Error("Failed to generate CV structure from AI response");
@@ -312,9 +345,17 @@ TASK: Generate a structured CV JSON for this user.
   try {
     const cvStructure = JSON.parse(jsonText) as CvStructure;
 
+    cvStructure.contactInfo = {
+      email: input.email,
+      phone: input.phoneNumber,
+      location: input.location || null,
+    };
+    if (cvStructure.fullName) {
+      cvStructure.fullName = undefined;
+    }
+
     // Validate structure
     if (
-      !cvStructure.fullName ||
       !cvStructure.contactInfo ||
       !cvStructure.contactInfo.email ||
       !cvStructure.contactInfo.phone

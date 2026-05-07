@@ -268,6 +268,20 @@ export const MatchMakingService = async (
 
 export const GenerateCvService = async (jobSeekerId: number) => {
   try {
+    const removeNameFromText = (value: string, names: string[]) => {
+      if (!value || !names.length) return value;
+      let output = value;
+      for (const name of names) {
+        if (!name) continue;
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`\\b${escaped}\\b`, "gi");
+        output = output
+          .replace(regex, "")
+          .replace(/\s{2,}/g, " ")
+          .trim();
+      }
+      return output;
+    };
     // Fetch the job seeker from database
     const jobSeeker = await prisma.jobSeeker.findUnique({
       where: { id: jobSeekerId },
@@ -277,6 +291,8 @@ export const GenerateCvService = async (jobSeekerId: number) => {
         lastName: true,
         email: true,
         phoneNumber: true,
+        city: true,
+        country: true,
         skills: true,
         languages: true,
         bio: true,
@@ -311,9 +327,9 @@ export const GenerateCvService = async (jobSeekerId: number) => {
 
     // Prepare CV generation input
     const cvInput = {
-      name: `${jobSeeker.firstName} ${jobSeeker.lastName}`,
       email: jobSeeker.email,
       phoneNumber: jobSeeker.phoneNumber,
+      location: [jobSeeker.city, jobSeeker.country].filter(Boolean).join(", "),
       skills: jobSeeker.skills || [],
       languages: jobSeeker.languages || [],
       bio: jobSeeker.bio || "Motivated professional seeking new opportunities",
@@ -322,7 +338,12 @@ export const GenerateCvService = async (jobSeekerId: number) => {
     };
 
     // Generate CV using AI
-    const generatedCvText = await generateCv(cvInput);
+    let generatedCvText = await generateCv(cvInput);
+
+    const nameParts = [jobSeeker.firstName, jobSeeker.lastName]
+      .filter(Boolean)
+      .flatMap((name) => String(name).split(/\s+/));
+    generatedCvText = removeNameFromText(generatedCvText, nameParts);
 
     if (!generatedCvText || generatedCvText.trim().length === 0) {
       throw new AppError("Failed to generate CV", 500);
@@ -353,12 +374,67 @@ export const GenerateCvService = async (jobSeekerId: number) => {
     throw new AppError(`Error occurred while generating CV`, 500);
   }
 };
- 
+
 export const GenerateCvPdfService = async (
   jobSeekerId?: number,
   requestData?: any,
 ) => {
   try {
+    const removeNameFromText = (value: string, names: string[]) => {
+      if (!value || !names.length) return value;
+      let output = value;
+      for (const name of names) {
+        if (!name) continue;
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`\\b${escaped}\\b`, "gi");
+        output = output
+          .replace(regex, "")
+          .replace(/\s{2,}/g, " ")
+          .trim();
+      }
+      return output;
+    };
+
+    const sanitizeCvStructure = (structure: any, names: string[]) => {
+      if (!structure || !names.length) return structure;
+      if (structure.professionalSummary) {
+        structure.professionalSummary = removeNameFromText(
+          structure.professionalSummary,
+          names,
+        );
+      }
+      if (Array.isArray(structure.sections)) {
+        structure.sections = structure.sections.map((section: any) => {
+          const updated = { ...section };
+          if (Array.isArray(updated.paragraphs)) {
+            updated.paragraphs = updated.paragraphs.map((p: string) =>
+              removeNameFromText(p, names),
+            );
+          }
+          if (Array.isArray(updated.bullets)) {
+            updated.bullets = updated.bullets.map((b: string) =>
+              removeNameFromText(b, names),
+            );
+          }
+          if (updated.heading) {
+            updated.heading = removeNameFromText(updated.heading, names);
+          }
+          return updated;
+        });
+      }
+      if (structure.footer) {
+        structure.footer = removeNameFromText(structure.footer, names);
+      }
+      return structure;
+    };
+
+    const mergeArray = (primary?: any[], fallback?: any[]) => {
+      const combined = [...(primary || []), ...(fallback || [])].filter(
+        Boolean,
+      );
+      return Array.from(new Set(combined));
+    };
+
     // Helper: build a normalized cvInput from either DB record or incoming request data
     const buildCvInputFromRequest = (data: any) => {
       const snapshot = data.formSnapshot || data;
@@ -370,6 +446,18 @@ export const GenerateCvPdfService = async (
       const email = personal.email || data.email || snapshot.email;
       const phoneNumber =
         personal.phone || personal.phoneNumber || data.phone || snapshot.phone;
+      const city =
+        personal.city || data.city || snapshot.city || data.location?.city;
+      const country =
+        personal.country ||
+        data.country ||
+        snapshot.country ||
+        data.location?.country;
+      const location =
+        personal.location ||
+        data.location ||
+        snapshot.location ||
+        [city, country].filter(Boolean).join(", ");
       const skills = snapshot.skills || data.skills || [];
       const languages = snapshot.languages || data.languages || [];
       const bio =
@@ -381,27 +469,91 @@ export const GenerateCvPdfService = async (
       const portfolioLink = snapshot.portfolioLink || data.portfolioLink;
       const personalStatement =
         snapshot.personalStatement || data.personalStatement;
-
-      const name = `${firstName || ""} ${lastName || ""}`.trim();
+      const workExperience =
+        snapshot.workExperience ||
+        snapshot.experience ||
+        data.workExperience ||
+        data.experience ||
+        data.employmentHistory;
+      const education =
+        snapshot.education || data.education || data.educationalBackground;
+      const certifications =
+        snapshot.certifications || data.certifications || data.certification;
+      const projects = snapshot.projects || data.projects;
+      const awards = snapshot.awards || data.awards || data.honors;
+      const volunteering =
+        snapshot.volunteering || data.volunteering || data.volunteer;
+      const interests = snapshot.interests || data.interests || data.hobbies;
 
       return {
-        name,
+        firstName,
+        lastName,
         email,
         phoneNumber,
+        location,
         skills,
         languages,
         bio,
         portfolioLink,
         personalStatement,
+        workExperience,
+        education,
+        certifications,
+        projects,
+        awards,
+        volunteering,
+        interests,
       };
     };
 
     // If requestData is provided, use it to generate CV (optionally save if jobSeekerId also present)
     if (requestData) {
-      const cvInput = buildCvInputFromRequest(requestData);
+      let cvInput = buildCvInputFromRequest(requestData);
+
+      if (jobSeekerId) {
+        const dbProfile = await prisma.jobSeeker.findUnique({
+          where: { id: jobSeekerId },
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            city: true,
+            country: true,
+            skills: true,
+            languages: true,
+            bio: true,
+            portfolioLink: true,
+            personalStatement: true,
+          },
+        });
+
+        if (dbProfile) {
+          const dbLocation = [dbProfile.city, dbProfile.country]
+            .filter(Boolean)
+            .join(", ");
+          cvInput = {
+            ...cvInput,
+            firstName: cvInput.firstName || dbProfile.firstName,
+            lastName: cvInput.lastName || dbProfile.lastName,
+            email: cvInput.email || dbProfile.email,
+            phoneNumber: cvInput.phoneNumber || dbProfile.phoneNumber,
+            location: cvInput.location || dbLocation,
+            skills: mergeArray(cvInput.skills, dbProfile.skills),
+            languages: mergeArray(cvInput.languages, dbProfile.languages),
+            bio: cvInput.bio || dbProfile.bio,
+            portfolioLink: cvInput.portfolioLink || dbProfile.portfolioLink,
+            personalStatement:
+              cvInput.personalStatement || dbProfile.personalStatement,
+          };
+        }
+      }
+
+      const fullName =
+        `${cvInput.firstName || ""} ${cvInput.lastName || ""}`.trim();
 
       // Validate required fields (same requirements as DB flow)
-      if (!cvInput.name || !cvInput.email || !cvInput.phoneNumber) {
+      if (!fullName || !cvInput.email || !cvInput.phoneNumber) {
         throw new AppError(
           "Profile is incomplete. Name, email, and phone number are required.",
           400,
@@ -415,8 +567,34 @@ export const GenerateCvPdfService = async (
         );
       }
 
-      // Generate structured CV from AI
-      const cvStructure = await generateCvStructured(cvInput);
+      const aiInput = {
+        email: cvInput.email,
+        phoneNumber: cvInput.phoneNumber,
+        location: cvInput.location,
+        skills: cvInput.skills,
+        languages: cvInput.languages,
+        bio: cvInput.bio,
+        portfolioLink: cvInput.portfolioLink,
+        personalStatement: cvInput.personalStatement,
+        workExperience: cvInput.workExperience,
+        education: cvInput.education,
+        certifications: cvInput.certifications,
+        projects: cvInput.projects,
+        awards: cvInput.awards,
+        volunteering: cvInput.volunteering,
+        interests: cvInput.interests,
+      };
+
+      // Generate structured CV from AI (name-free input)
+      let cvStructure = await generateCvStructured(aiInput);
+
+      const nameParts = [cvInput.firstName, cvInput.lastName]
+        .filter(Boolean)
+        .flatMap((name) => String(name).split(/\s+/));
+      cvStructure = sanitizeCvStructure(cvStructure, nameParts);
+      if (cvStructure) {
+        cvStructure.fullName = undefined;
+      }
 
       if (!cvStructure) {
         throw new AppError("Failed to generate CV structure", 500);
@@ -484,6 +662,8 @@ export const GenerateCvPdfService = async (
         lastName: true,
         email: true,
         phoneNumber: true,
+        city: true,
+        country: true,
         skills: true,
         languages: true,
         bio: true,
@@ -518,9 +698,9 @@ export const GenerateCvPdfService = async (
 
     // Prepare CV generation input
     const cvInput = {
-      name: `${jobSeeker.firstName} ${jobSeeker.lastName}`,
       email: jobSeeker.email,
       phoneNumber: jobSeeker.phoneNumber,
+      location: [jobSeeker.city, jobSeeker.country].filter(Boolean).join(", "),
       skills: jobSeeker.skills || [],
       languages: jobSeeker.languages || [],
       bio: jobSeeker.bio || "Motivated professional seeking new opportunities",
@@ -529,7 +709,15 @@ export const GenerateCvPdfService = async (
     };
 
     // Generate structured CV from AI
-    const cvStructure = await generateCvStructured(cvInput);
+    let cvStructure = await generateCvStructured(cvInput);
+
+    const nameParts = [jobSeeker.firstName, jobSeeker.lastName]
+      .filter(Boolean)
+      .flatMap((name) => String(name).split(/\s+/));
+    cvStructure = sanitizeCvStructure(cvStructure, nameParts);
+    if (cvStructure) {
+      cvStructure.fullName = undefined;
+    }
 
     if (!cvStructure) {
       throw new AppError("Failed to generate CV structure", 500);
