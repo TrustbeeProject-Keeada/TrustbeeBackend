@@ -54,10 +54,6 @@ export const getAllJobSeekersService = async (
     },
   });
 
-  if (!jobSeekers) {
-    throw new AppError("No job seekers found", 404);
-  }
-
   const totalJobSeekers = await prisma.jobSeeker.count({ where: whereClause });
 
   return {

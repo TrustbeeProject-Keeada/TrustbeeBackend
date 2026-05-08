@@ -31,10 +31,6 @@ export const getJobSeekers = async (
       },
     );
 
-    if (!jobseekers) {
-      return res.status(404).json({ status: "No job seekers found" });
-    }
-
     res.status(200).json(jobseekers);
   } catch (error) {
     next(error);
@@ -50,12 +46,6 @@ export const getJobSeekerById = async (
     const id = req.params.id as string;
     const idInt = Number(id);
     const jobseeker = await getJobSeekerByIdService(idInt);
-
-    if (!jobseeker) {
-      return res
-        .status(404)
-        .json({ status: `Job seeker with id ${id} not found` });
-    }
 
     res.status(200).json(jobseeker);
   } catch (error) {

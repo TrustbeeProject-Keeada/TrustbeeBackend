@@ -2,12 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { AppError } from "../utils/app.error.js";
 
-// 1. Detta säger åt TypeScript att Express Request-objekt nu har en 'jobseeker'
 declare global {
   namespace Express {
     interface Request {
       user?: {
-        id: number; // Använder number eftersom ditt ID i databasen är en Int
+        id: number;
         role: string;
         firstName?: string;
       };
@@ -23,7 +22,6 @@ export const protect = async (
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    // 2. Vi använder return next() istället för throw i en asynkron funktion!
     return next(new AppError("Unauthorized", 401));
   }
 
@@ -38,8 +36,7 @@ export const protect = async (
     };
     next();
   } catch (error) {
-    console.log(error);
-    next(error);
+    next(new AppError("Invalid or expired token", 401));
   }
 };
 

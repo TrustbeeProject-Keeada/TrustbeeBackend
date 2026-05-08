@@ -22,7 +22,6 @@ export const registerJobSeekerService = async (
     throw new AppError("Job seeker with that email already exists", 409);
   }
 
-  // encrypt the password
   const hashedPassword = await bcrypt.hash(data.password, 12);
 
   const createdJobSeeker = await prisma.jobSeeker.create({
@@ -115,7 +114,6 @@ export const registerCompanyRecruiterService = async (
     throw new AppError("Company recruiter with that email already exists", 409);
   }
 
-  // encrypt the password
   const hashedPassword = await bcrypt.hash(data.password, 12);
 
   return prisma.companyRecruiter.create({
@@ -139,7 +137,6 @@ export const registerCompanyRecruiterService = async (
 export const logInCompanyRecruiterService = async (
   data: LoginCompanyRecruiterTypeZ,
 ) => {
-  // compare the passed in email with the one in the database
   const companyRecruiter = await prisma.companyRecruiter.findUnique({
     where: { email: data.email },
   });
@@ -148,17 +145,15 @@ export const logInCompanyRecruiterService = async (
     throw new AppError("Invalid email or password", 401);
   }
 
-  // compare the passed in password with the one in the database
   const isPasswordValid = await bcrypt.compare(
     data.password,
-    companyRecruiter.password, // finds the password assigned to the email and compares it with the passed in password
+    companyRecruiter.password,
   );
 
   if (!isPasswordValid) {
     throw new AppError("Invalid email or password", 401);
   }
 
-  // add jwt token generation here
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
     throw new AppError("JWT_SECRET not set", 500);
@@ -179,6 +174,6 @@ export const logInCompanyRecruiterService = async (
     },
   );
 
-  const { password, ...companyRecruiterExcludingPassword } = companyRecruiter; // this is to exclude the password from the returned object
+  const { password, ...companyRecruiterExcludingPassword } = companyRecruiter;
   return { ...companyRecruiterExcludingPassword, token };
 };

@@ -2,10 +2,6 @@ import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { getBankJobByIdService } from "./job.service.js";
 
-// ==========================================
-// BOKMÄRK JOBB
-// ==========================================
-
 export const saveJobService = async (
   jobSeekerId: number,
   jobIdParam: string,
@@ -100,7 +96,6 @@ export const unsaveJobService = async (
       throw new AppError("Invalid ID. We could not remove the job.", 400);
     }
 
-    // 1. KOLLA FÖRST: Finns jobbet överhuvudtaget i systemet?
     const jobExists = await prisma.job.findUnique({
       where: { id: jobId },
     });
@@ -109,7 +104,6 @@ export const unsaveJobService = async (
       throw new AppError("Job with this ID does not exist.", 404);
     }
 
-    // 2. KOLLA SEN: Är jobbet sparat av användaren?
     const existing = await prisma.savedJob.findUnique({
       where: { jobSeekerId_jobId: { jobSeekerId, jobId } },
     });
@@ -178,10 +172,6 @@ export const getSavedJobsService = async (jobSeekerId: number) => {
   );
 };
 
-// ==========================================
-// BOKMÄRK FÖRETAG
-// ==========================================
-
 export const saveCompanyService = async (
   jobSeekerId: number,
   companyId: number,
@@ -223,7 +213,6 @@ export const unsaveCompanyService = async (
     throw new AppError("Invalid ID. We could not remove the company.", 400);
   }
 
-  // 1. KOLLA OM FÖRETAGET ÖVERHUVUDTAGET FINNS
   const company = await prisma.companyRecruiter.findUnique({
     where: { id: companyId },
   });
@@ -232,7 +221,6 @@ export const unsaveCompanyService = async (
     throw new AppError("Company with this ID does not exist.", 404);
   }
 
-  // 2. KOLLA OM DET ÄR SPARAT
   const existing = await prisma.savedCompany.findUnique({
     where: { jobSeekerId_companyId: { jobSeekerId, companyId } },
   });
@@ -241,7 +229,6 @@ export const unsaveCompanyService = async (
     throw new AppError("This company is not saved.", 404);
   }
 
-  // 3. RADERA OM ALLT OVAN STÄMMER
   return await prisma.savedCompany.delete({
     where: { jobSeekerId_companyId: { jobSeekerId, companyId } },
   });

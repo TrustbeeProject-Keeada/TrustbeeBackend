@@ -140,30 +140,6 @@ export async function api_health() {
       },
     ],
   });
-  console.log(response.text);
-  return response.text;
-}
-
-export async function job_matching_evaluation(userId: number, jobAdId: number) {
-  const data = await getJobMatchingData(userId, jobAdId);
-  const user_cv = `cv: ${data.jobSeeker.cv}`;
-  const job_description = `job description: ${data.job.description}`;
-
-  const response = await getGeminiClient().models.generateContent({
-    model: DEFAULT_GENAI_MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text:
-              systemInstruction + "\n\n" + user_cv + "\n\n" + job_description,
-          },
-        ],
-      },
-    ],
-  });
-  console.log(response.text);
   return response.text;
 }
 
@@ -281,6 +257,7 @@ RULES (read first):
 - You may rephrase and regroup content for clarity, and infer immediately-implied domain labels (e.g. SQL → Databases). Nothing beyond that.
 - Every bullet must start with a past-tense action verb. Never start with "Responsible for", "Helped with", or "Worked on"
 - If input is sparse, write fewer bullets rather than padding with generic ones
+- Enrich and professionally rewrite the user's content — improve phrasing, strengthen action verbs, and surface implied achievements — without inventing new facts
 
 SCHEMA:
 {
@@ -296,7 +273,8 @@ SCHEMA:
     {
       "heading": string,
       "paragraphs": [string] | null,
-      "bullets": [string] | null
+      "bullets": [string] | null,
+      "dividerLines": [string] | null
     }
   ],
   "footer": string | null
@@ -307,20 +285,25 @@ Each entry is ONE string in the paragraphs array, using this exact layout:
   "Job Title\nCompany Name, Location\n- Bullet 1\n- Bullet 2 | Date Range"
 
 Rules for this format:
-- First line = title/degree (rendered large, accent color)
+- First line = title/degree (rendered in accent color — the role or degree name)
 - Second line = organization name and location (rendered as subtitle)
 - Bullet lines starting with "- " follow immediately after
 - The text after " | " is the date range, right-aligned — put ONLY the date there, nothing else
-- Do NOT use the section-level "bullets" array for WORK EXPERIENCE or EDUCATION entries
+- Do NOT use the section-level "bullets" or "dividerLines" arrays for WORK EXPERIENCE or EDUCATION
 
-SECTION-LEVEL bullets (not paragraphs) are for: SKILLS, LANGUAGES, CERTIFICATIONS, and similar flat lists.
+SECTION FIELD USAGE:
+- "paragraphs" → WORK EXPERIENCE and EDUCATION sections only
+- "dividerLines" → SKILLS section (each skill or skill group on its own line, separated by dividers in the PDF)
+- "bullets" → LANGUAGES, CERTIFICATIONS, PROJECTS, and other flat lists
 
 INSTRUCTIONS:
-1. Parse all information from the user profile above
-2. Create a professional CV structure matching the schema
-3. Include sections as applicable: SKILLS, LANGUAGES, WORK EXPERIENCE, EDUCATION, PROJECTS, CERTIFICATIONS
-4. Only set "headline" if the user's role is unambiguous from their experience; otherwise null
-5. Only set "preferredFont" to Calibri or Georgia if it fits; otherwise null
+1. Parse and enrich all information from the user profile above
+2. Create a professional, ATS-optimized CV structure matching the schema
+3. Include sections as applicable: Work Experience, Education, Skills, Languages, Certifications
+4. Use "dividerLines" (NOT "bullets") for the Skills section so each skill renders with a divider line above and below
+5. Only set "headline" if the user's role is clear from their experience (e.g. "Software Developer", "Project Manager"); otherwise null
+6. Only set "preferredFont" to Calibri or Georgia if it fits the profession; otherwise null
+7. Write a compelling "professionalSummary" (3–5 sentences) even if the user's bio is brief — expand on their skills and experience level
 
 TASK: Generate a structured CV JSON for this user.
   `;

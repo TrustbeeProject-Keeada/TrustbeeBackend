@@ -95,7 +95,7 @@ export const createJob = async (
 ) => {
   try {
     const data = req.body;
-    const user = req.user; // Access the user object set by the auth middleware
+    const user = req.user;
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -116,7 +116,7 @@ export const updateJobById = async (
     const id = req.params.id as string;
     const idInt = Number(id);
     const data = req.body;
-    const user = req.user; // Access the user object set by the auth middleware
+    const user = req.user;
 
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -137,11 +137,10 @@ export const deleteJobById = async (
     const id = req.params.id as string;
     const idInt = Number(id);
 
-    const user = req.user; // Access the user object set by the auth middleware
+    const user = req.user;
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    // Implementation for deleting job goes here
     const deleteJob = await deleteJobByIdService(idInt, user.id);
     res
       .status(200)
@@ -160,7 +159,7 @@ export const changeJobStatus = async (
     const id = req.params.id as string;
     const idInt = Number(id);
     const { status } = req.body;
-    const user = req.user; // Access the user object set by the auth middleware
+    const user = req.user;
 
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });

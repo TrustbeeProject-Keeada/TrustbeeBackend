@@ -6,9 +6,6 @@ import {
   DeleteCompanyRecruiterByIdService,
 } from "../services/companyrecruiter.service.js";
 
-// ! CRUD operations for job recruiter
-
-// ? Get all job recruiters
 export const GetCompanyRecruiters = async (
   req: Request,
   res: Response,
@@ -42,7 +39,6 @@ export const GetCompanyRecruiters = async (
   }
 };
 
-// ? Get a single job recruiter by ID
 export const GetCompanyRecruitersById = async (
   req: Request,
   res: Response,
@@ -52,11 +48,6 @@ export const GetCompanyRecruitersById = async (
     const id = req.params.id as string;
     const idInt = Number(id);
     const companyRecruiter = await GetCompanyRecruiterByIdService(idInt);
-    if (!companyRecruiter) {
-      return res
-        .status(404)
-        .json({ status: `Company recruiter with id ${id} not found` });
-    }
     res.status(200).json({
       status: "success",
       data: companyRecruiter,
@@ -66,7 +57,6 @@ export const GetCompanyRecruitersById = async (
   }
 };
 
-// ? Update job recruiter  details by ID
 export const UpdateCompanyRecruiterById = async (
   req: Request,
   res: Response,
@@ -86,11 +76,6 @@ export const UpdateCompanyRecruiterById = async (
       idInt,
       updateData,
     );
-    if (!updatedCompanyRecruiter) {
-      return res
-        .status(404)
-        .json({ status: `Company recruiter with id ${id} not found` });
-    }
 
     res.status(200).json({
       status: "success",
@@ -101,7 +86,6 @@ export const UpdateCompanyRecruiterById = async (
   }
 };
 
-// ? Delete job recruiter account by ID
 export const DeleteCompanyRecruiterById = async (
   req: Request,
   res: Response,
@@ -119,11 +103,6 @@ export const DeleteCompanyRecruiterById = async (
     const deletedCompanyRecruiter =
       await DeleteCompanyRecruiterByIdService(idInt);
 
-    if (!deletedCompanyRecruiter) {
-      return res
-        .status(404)
-        .json({ message: `Company recruiter with id ${id} not found` });
-    }
     res.status(200).json({
       status: "success",
       data: deletedCompanyRecruiter,

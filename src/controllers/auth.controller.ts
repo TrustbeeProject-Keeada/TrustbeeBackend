@@ -19,10 +19,6 @@ export const RegisterJobSeeker = async (
     const data = req.body;
     const newJobSeeker = await registerJobSeekerService(data);
 
-    if (!newJobSeeker) {
-      return res.status(500).json({ status: "Failed to create job seeker" });
-    }
-
     res.status(201).json({
       status: "Job seeker created successfully",
       jobseeker: newJobSeeker,
@@ -40,10 +36,6 @@ export const LogInJobSeeker = async (
   try {
     const data = req.body;
     const jobSeeker = await logInJobSeekerService(data);
-
-    if (!jobSeeker) {
-      return res.status(401).json({ status: "Invalid email or password" });
-    }
 
     res.status(200).json({
       status: "Job seeker logged in successfully",
@@ -63,12 +55,6 @@ export const RegisterCompanyRecruiter = async (
     const data = req.body;
     const newCompanyRecruiter = await registerCompanyRecruiterService(data);
 
-    if (!newCompanyRecruiter) {
-      return res
-        .status(500)
-        .json({ status: "Failed to create company recruiter" });
-    }
-
     res.status(201).json({
       status: "Company recruiter created successfully",
       companyRecruiter: newCompanyRecruiter,
@@ -86,10 +72,6 @@ export const LogInCompanyRecruiter = async (
   try {
     const data = req.body;
     const companyRecruiter = await logInCompanyRecruiterService(data);
-
-    if (!companyRecruiter) {
-      return res.status(401).json({ status: "Invalid email or password" });
-    }
 
     res.status(200).json({
       status: "Company recruiter logged in successfully",

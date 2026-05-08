@@ -134,7 +134,7 @@ export const createJobService = async (
   data: CreateJobTypeZ,
   companyId: number,
 ) => {
-  const newJob = await prisma.job.create({
+  return prisma.job.create({
     data: {
       companyId: companyId,
       title: data.title,
@@ -146,10 +146,6 @@ export const createJobService = async (
       category: data.category,
     },
   });
-  if (!newJob) {
-    throw new AppError("Failed to create job", 500);
-  }
-  return newJob;
 };
 
 export const updateJobByIdService = async (
@@ -230,15 +226,11 @@ export const changeJobStatusService = async (
 
 export const cleanUpOldArchivedJobsService = async () => {
   const threeMonthsAgo = new Date();
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3); // This works by subtracting 3 months from the current date, so it will give us the date that is 3 months ago from now
-  // const oneMinuteAgo = new Date();
-  // oneMinuteAgo.setMinutes(oneMinuteAgo.getMinutes() - 1); // This is for testing purposes, it will delete jobs that were updated more than 1 minute ago
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
   const result = await prisma.job.deleteMany({
     where: {
       status: "ARCHIVED",
-      updatedAt: {
-        lt: threeMonthsAgo, // lt = less than, this means we want to delete jobs that were updated before the date that is 3 months ago from now
-      },
+      updatedAt: { lt: threeMonthsAgo },
     },
   });
   return result;
@@ -248,10 +240,8 @@ export const archiveExpiredJobsService = async () => {
   const rightNow = new Date();
   const updatedJobs = await prisma.job.updateMany({
     where: {
-      expiresAt: {
-        lt: rightNow, // This means we want to update jobs that have an expiresAt date that is less than the current date, which means they are expired
-      },
-      status: "ACTIVE", // We only want to archive jobs that are currently active, we don't want to archive jobs that are already archived
+      expiresAt: { lt: rightNow },
+      status: "ACTIVE",
     },
     data: {
       status: "ARCHIVED",
@@ -325,7 +315,8 @@ export const getJobBankService = async (
         }))
       : [];
 
-    const totalJobs = data.total || 0;
+    const totalJobs =
+      typeof data.total === "object" ? (data.total?.value ?? 0) : (data.total ?? 0);
     const totalPages = Math.ceil(totalJobs / limit);
 
     return {
