@@ -144,7 +144,7 @@ export const getSavedJobsService = async (jobSeekerId: number) => {
   });
 
   return await Promise.all(
-    savedJobs.map(async (savedJob) => {
+    savedJobs.map(async (savedJob: (typeof savedJobs)[number]) => {
       const jobSource = savedJob.job_source || "database";
 
       if (jobSource === "jobbank" && savedJob.job_bank_id) {
