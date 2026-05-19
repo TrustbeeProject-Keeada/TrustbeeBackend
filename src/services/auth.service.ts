@@ -30,12 +30,14 @@ export const registerJobSeekerService = async (
       lastName: data.lastName,
       email: data.email,
       password: hashedPassword,
+      ...(data.phoneNumber && { phoneNumber: data.phoneNumber }),
     },
     select: {
       id: true,
       firstName: true,
       lastName: true,
       email: true,
+      phoneNumber: true,
     },
   });
 
