@@ -139,36 +139,6 @@ const provisionRecruiterService = async (
   return newRecruiter.id;
 };
 
-const ensureChatConnectionService = async (
-  jobSeekerId: number,
-  recruiterId: number,
-): Promise<void> => {
-  const existingMessages = await prisma.messages.findFirst({
-    where: {
-      OR: [
-        {
-          senderJobSeekerId: jobSeekerId,
-          receiverRecruiterId: recruiterId,
-        },
-        {
-          senderRecruiterId: recruiterId,
-          receiverJobSeekerId: jobSeekerId,
-        },
-      ],
-    },
-  });
-
-  if (!existingMessages) {
-    await prisma.messages.create({
-      data: {
-        content: "[System: Connection established for job application]",
-        senderJobSeekerId: jobSeekerId,
-        receiverRecruiterId: recruiterId,
-      },
-    });
-  }
-};
-
 /**
  * Fetch job data from Arbetsförmedlingen API with fallback
  * Returns minimal company data or null if fetch fails
@@ -219,9 +189,6 @@ export const applyOnWebsiteService = async (
       country,
       jobSeekerFirstName,
     );
-
-    // Establish chat connection (always succeeds)
-    await ensureChatConnectionService(jobSeekerId, recruiterId);
 
     return {
       status: "success",
