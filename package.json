@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "dev:services": "docker compose up -d",
     "dev:services:down": "docker compose down",
-    "build": "prisma generate && tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.json && cp -r src/generated dist/generated",
     "start": "node dist/server.js"
   },
   "keywords": [],
