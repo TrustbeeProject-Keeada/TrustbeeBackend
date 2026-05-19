@@ -324,6 +324,13 @@ export const GenerateCvPdfService = async (
     bio:        jobSeeker.bio || "Motivated professional seeking new opportunities",
     portfolioLink:     jobSeeker.portfolioLink || undefined,
     personalStatement: jobSeeker.personalStatement || undefined,
+    workExperience: [],
+    education: [],
+    certifications: [],
+    projects: [],
+    awards: [],
+    volunteering: [],
+    interests: [],
   };
 
   const nameParts = [jobSeeker.firstName, jobSeeker.lastName]
