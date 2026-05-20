@@ -47,24 +47,23 @@ export const createApp = () => {
   // HTTP request logging — concise in production, detailed in dev
   app.use(morgan(isProd ? "combined" : "dev"));
 
-  const corsOrigin = process.env.CORS_ORIGIN;
-  const allowedOrigins = corsOrigin
-    ? corsOrigin.split(",").map((o) => o.trim())
-    : ["http://localhost:8080"];
+  const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:8080")
+    .split(",")
+    .map((o) => o.trim());
 
   const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS: origin '${origin}' not allowed`));
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin not allowed: ${origin}`));
+      }
     },
     credentials: true,
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   };
 
-  app.options("*", cors(corsOptions)); // preflight must be first
   app.use(cors(corsOptions));
   app.use(cookieParser());
   app.use(express.json({ limit: "500kb" }));
