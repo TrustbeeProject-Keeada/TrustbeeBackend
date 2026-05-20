@@ -17,7 +17,10 @@ const isProd = process.env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: isProd,
-  sameSite: "lax" as const,
+  // Cross-origin (Vercel → Render): must be "none" so the browser sends the
+  // cookie on cross-site fetch requests. "none" requires secure:true, which is
+  // already enforced in production above.
+  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
   maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
   path: "/",
 };
@@ -100,7 +103,11 @@ export const LogInCompanyRecruiter = async (
 };
 
 export const Logout = (req: Request, res: Response) => {
-  res.clearCookie("trustbee_token", { path: "/" });
+  res.clearCookie("trustbee_token", {
+    path: "/",
+    secure: isProd,
+    sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+  });
   res.status(200).json({ status: "Logged out successfully" });
 };
 
