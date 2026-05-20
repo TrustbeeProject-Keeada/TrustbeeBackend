@@ -8,13 +8,14 @@ import {
 import { protect, restrictTo } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { updateApplicationStatusValidation } from "../models/application.model.js";
+import { applyLimiter } from "../middleware/limiters.js";
 
 const router = Router();
 
 router.use(protect);
 
-router.post("/job/:jobId", restrictTo("JOB_SEEKER"), applyForJob);
-router.post("/website/:jobBankId", restrictTo("JOB_SEEKER"), applyOnWebsite);
+router.post("/job/:jobId", restrictTo("JOB_SEEKER"), applyLimiter, applyForJob);
+router.post("/website/:jobBankId", restrictTo("JOB_SEEKER"), applyLimiter, applyOnWebsite);
 
 router.get(
   "/job/:jobId",

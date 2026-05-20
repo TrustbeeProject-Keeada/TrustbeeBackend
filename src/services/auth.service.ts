@@ -9,7 +9,8 @@ import {
   LoginCompanyRecruiterTypeZ,
   RegisterCompanyRecruiterTypeZ,
 } from "../models/companyrecruiter.model.js";
-import jwt, { SignOptions } from "jsonwebtoken";
+import jwt, { SignOptions, JwtPayload } from "jsonwebtoken";
+import { sendPasswordResetMail } from "../utils/mailer.js";
 
 export const registerJobSeekerService = async (
   data: RegisterJobSeekerTypeZ,
@@ -178,4 +179,100 @@ export const logInCompanyRecruiterService = async (
 
   const { password, ...companyRecruiterExcludingPassword } = companyRecruiter;
   return { ...companyRecruiterExcludingPassword, token };
+};
+
+// ── Password reset ─────────────────────────────────────────────────────────
+// Token is signed with JWT_SECRET + the user's current password hash.
+// This makes the token single-use: once the password changes the hash changes
+// and any outstanding token is instantly invalid — no extra DB columns needed.
+
+export const forgotPasswordService = async (email: string) => {
+  const jwtSecret = process.env.JWT_SECRET!;
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:8080";
+
+  // Check job seekers first, then recruiters
+  const jobSeeker = await prisma.jobSeeker.findUnique({ where: { email } });
+  if (jobSeeker) {
+    const secret = jwtSecret + jobSeeker.password;
+    const token = jwt.sign(
+      { id: jobSeeker.id, email, role: "JOB_SEEKER" },
+      secret,
+      { expiresIn: "1h" },
+    );
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}&role=JOB_SEEKER`;
+    await sendPasswordResetMail({ to: email, resetUrl });
+    return;
+  }
+
+  const recruiter = await prisma.companyRecruiter.findUnique({
+    where: { email },
+  });
+  if (recruiter) {
+    const secret = jwtSecret + recruiter.password;
+    const token = jwt.sign(
+      { id: recruiter.id, email, role: "COMPANY_RECRUITER" },
+      secret,
+      { expiresIn: "1h" },
+    );
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}&role=COMPANY_RECRUITER`;
+    await sendPasswordResetMail({ to: email, resetUrl });
+    return;
+  }
+
+  // Don't reveal whether the email exists — silently succeed
+};
+
+export const resetPasswordService = async (data: {
+  token: string;
+  email: string;
+  role: string;
+  newPassword: string;
+}) => {
+  const jwtSecret = process.env.JWT_SECRET!;
+
+  if (data.role === "COMPANY_RECRUITER") {
+    const recruiter = await prisma.companyRecruiter.findUnique({
+      where: { email: data.email },
+    });
+    if (!recruiter) throw new AppError("Invalid or expired reset link.", 400);
+
+    let decoded: JwtPayload;
+    try {
+      decoded = jwt.verify(data.token, jwtSecret + recruiter.password) as JwtPayload;
+    } catch {
+      throw new AppError("Invalid or expired reset link.", 400);
+    }
+
+    if (decoded.email !== data.email)
+      throw new AppError("Invalid or expired reset link.", 400);
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 12);
+    await prisma.companyRecruiter.update({
+      where: { id: recruiter.id },
+      data: { password: hashedPassword },
+    });
+    return;
+  }
+
+  // Default: JOB_SEEKER
+  const jobSeeker = await prisma.jobSeeker.findUnique({
+    where: { email: data.email },
+  });
+  if (!jobSeeker) throw new AppError("Invalid or expired reset link.", 400);
+
+  let decoded: JwtPayload;
+  try {
+    decoded = jwt.verify(data.token, jwtSecret + jobSeeker.password) as JwtPayload;
+  } catch {
+    throw new AppError("Invalid or expired reset link.", 400);
+  }
+
+  if (decoded.email !== data.email)
+    throw new AppError("Invalid or expired reset link.", 400);
+
+  const hashedPassword = await bcrypt.hash(data.newPassword, 12);
+  await prisma.jobSeeker.update({
+    where: { id: jobSeeker.id },
+    data: { password: hashedPassword },
+  });
 };

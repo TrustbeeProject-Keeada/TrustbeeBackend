@@ -5,6 +5,7 @@ import {
   GenerateCvController,
   GenerateCvPdfController,
 } from "../controllers/ai.controller.js";
+import { aiLimiter } from "../middleware/limiters.js";
 
 const router = Router();
 
@@ -13,10 +14,10 @@ router.get("/api_health", async (req, res) => {
   res.json({ status: "ok✅", timestamp: new Date().toISOString(), ai: health });
 });
 
-router.post("/matchmake", MatchMakingController);
+router.post("/matchmake", aiLimiter, MatchMakingController);
 
-router.post("/generate-cv/:jobseekerId", GenerateCvController);
+router.post("/generate-cv/:jobseekerId", aiLimiter, GenerateCvController);
 
-router.post("/generate-cv-pdf/:jobseekerId", GenerateCvPdfController);
+router.post("/generate-cv-pdf/:jobseekerId", aiLimiter, GenerateCvPdfController);
 
 export default router;

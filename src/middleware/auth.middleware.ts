@@ -19,7 +19,10 @@ export const protect = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  // Prefer httpOnly cookie; fall back to Authorization header for API clients
+  const token =
+    req.cookies?.trustbee_token ??
+    req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return next(new AppError("Unauthorized", 401));

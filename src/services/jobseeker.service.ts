@@ -113,10 +113,35 @@ export const getJobSeekerByIdService = async (id: number) => {
   };
 };
 
+const MAX_CV_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_PICTURE_BYTES = 2 * 1024 * 1024; // 2 MB
+
+function base64ByteSize(b64: string): number {
+  // Base64 encodes 3 bytes as 4 chars; padding '=' doesn't add data
+  const base = b64.length * 0.75;
+  const padding = (b64.match(/=+$/) || [""])[0].length;
+  return Math.floor(base - padding);
+}
+
 export const updateJobSeekerByIdService = async (
   jobseekerId: number,
   data: UpdateJobSeekerTypeZ,
 ) => {
+  if (data.cv) {
+    const raw = data.cv.split(",")[1] || data.cv;
+    if (base64ByteSize(raw) > MAX_CV_BYTES)
+      throw new AppError("CV file too large. Maximum size is 5 MB.", 413);
+  }
+
+  if (data.profilePicture) {
+    const raw = data.profilePicture.split(",")[1] || data.profilePicture;
+    if (base64ByteSize(raw) > MAX_PICTURE_BYTES)
+      throw new AppError(
+        "Profile picture too large. Maximum size is 2 MB.",
+        413,
+      );
+  }
+
   const cvBuffer = data.cv
     ? Buffer.from(data.cv.split(",")[1] || data.cv, "base64")
     : undefined;

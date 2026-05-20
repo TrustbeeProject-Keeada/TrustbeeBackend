@@ -8,7 +8,19 @@ import { RegisterCompanyRecruiterTypeZ } from "../models/companyrecruiter.model.
 import {
   registerCompanyRecruiterService,
   logInCompanyRecruiterService,
+  forgotPasswordService,
+  resetPasswordService,
 } from "../services/auth.service.js";
+
+const isProd = process.env.NODE_ENV === "production";
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: "lax" as const,
+  maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
+  path: "/",
+};
 
 export const RegisterJobSeeker = async (
   req: Request<{}, {}, RegisterJobSeekerTypeZ>,
@@ -35,7 +47,9 @@ export const LogInJobSeeker = async (
 ) => {
   try {
     const data = req.body;
-    const jobSeeker = await logInJobSeekerService(data);
+    const { token, ...jobSeeker } = await logInJobSeekerService(data);
+
+    res.cookie("trustbee_token", token, COOKIE_OPTIONS);
 
     res.status(200).json({
       status: "Job seeker logged in successfully",
@@ -71,12 +85,50 @@ export const LogInCompanyRecruiter = async (
 ) => {
   try {
     const data = req.body;
-    const companyRecruiter = await logInCompanyRecruiterService(data);
+    const { token, ...companyRecruiter } =
+      await logInCompanyRecruiterService(data);
+
+    res.cookie("trustbee_token", token, COOKIE_OPTIONS);
 
     res.status(200).json({
       status: "Company recruiter logged in successfully",
-      companyRecruiter: companyRecruiter,
+      companyRecruiter,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const Logout = (req: Request, res: Response) => {
+  res.clearCookie("trustbee_token", { path: "/" });
+  res.status(200).json({ status: "Logged out successfully" });
+};
+
+export const ForgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    await forgotPasswordService(req.body.email);
+    // Always return 200 to avoid revealing whether the email exists
+    res.status(200).json({
+      message: "If that email is registered, a reset link has been sent.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const ResetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { token, email, role, newPassword } = req.body;
+    await resetPasswordService({ token, email, role, newPassword });
+    res.status(200).json({ message: "Password reset successfully." });
   } catch (error) {
     next(error);
   }

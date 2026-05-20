@@ -1,5 +1,8 @@
 import express, { type Request, type Response } from "express";
 import cors, { type CorsOptions } from "cors";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import morgan from "morgan";
 import jobSeekerRoutes from "./routes/jobseeker.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
@@ -12,64 +15,74 @@ import { api_health } from "./ai_implementation/ai_instance.js";
 import applicationRoutes from "./routes/application.routes.js";
 import supportRoutes from "./routes/support.routes.js";
 import savedRoutes from "./routes/saved.routes.js";
+import { globalLimiter } from "./middleware/limiters.js";
+
+// Fail fast if critical env vars are missing or placeholder
+const REQUIRED_ENV: Record<string, string | undefined> = {
+  JWT_SECRET: process.env.JWT_SECRET,
+};
+for (const [key, value] of Object.entries(REQUIRED_ENV)) {
+  if (!value || value === "replace_with_a_secure_random_value") {
+    throw new Error(
+      `Missing or placeholder env var: ${key}. Set a real value before starting the server.`,
+    );
+  }
+}
 
 export const createApp = () => {
   const app = express();
 
-  // enable CORS
+  const isProd = process.env.NODE_ENV === "production";
+
+  // Security headers
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    }),
+  );
+
+  // HTTP request logging — concise in production, detailed in dev
+  app.use(morgan(isProd ? "combined" : "dev"));
+
   const corsOrigin = process.env.CORS_ORIGIN;
   const corsOptions: CorsOptions = {
-    origin: corsOrigin ? corsOrigin.split(",") : true,
+    origin: corsOrigin ? corsOrigin.split(",") : "http://localhost:8080",
     credentials: true,
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   };
 
   app.use(cors(corsOptions));
-  // cors middleware handles preflight requests
-
+  app.use(cookieParser());
   app.use(express.json({ limit: "500kb" }));
+  app.use("/api", globalLimiter);
 
-  // job seeker routes
   app.use("/api/jobseekers", jobSeekerRoutes);
   app.use("/api/companyrecruiter", companyRecruiterRoutes);
-
-  // application routes
   app.use("/api/applications", applicationRoutes);
-
-  // job routes
   app.use("/api/jobs", jobRoutes);
-
-  // saved routes
   app.use("/api/saved", savedRoutes);
-
-  // auth routes
   app.use("/api/auth", authRoutes);
-
-  // support routes
   app.use("/api/support", supportRoutes);
-
-  // AI routes
   app.use("/api", aiRoutes);
 
   app.use(errorHandler);
 
   app.get("/health", async (req: Request, res: Response) => {
     let aiStatus: unknown = "disabled";
-
     if (process.env.gemini_api_key) {
       try {
         aiStatus = await api_health();
-      } catch (error) {
+      } catch {
         aiStatus = "unavailable";
       }
     }
-
     res.status(200).json({
-      status: "ok✅",
+      status: "ok",
       timestamp: new Date().toISOString(),
       ai: aiStatus,
     });
   });
+
   return app;
 };

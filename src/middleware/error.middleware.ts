@@ -61,8 +61,9 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     console.error("Unexpected error:", err);
   }
 
+  const isProd = process.env.NODE_ENV === "production";
   res.status(statusCode).json({
-    message,
-    ...(details !== undefined ? { details } : {}),
+    message: isProd && statusCode === 500 ? "Internal server error" : message,
+    ...(details !== undefined && !isProd ? { details } : {}),
   });
 };
