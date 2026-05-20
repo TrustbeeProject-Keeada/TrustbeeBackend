@@ -4,6 +4,7 @@ import {
   evaluateJobMatch,
   generateCv,
   generateCvStructured,
+  generateJobDescription,
 } from "../ai_implementation/ai_instance.js";
 import { buildCvPdf } from "../utils/pdf.builder.js";
 
@@ -351,4 +352,21 @@ export const GenerateCvPdfService = async (
     generatedAt:  new Date(),
     message: "CV PDF generated, saved, and ready for download",
   };
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+export const GenerateJobDescriptionService = async (body: {
+  title: string;
+  responsibilities: string;
+  requirements: string;
+  location?: string;
+  employmentType?: string;
+  additionalInfo?: string;
+}) => {
+  if (!body.title?.trim())           throw new AppError("Job title is required", 400);
+  if (!body.responsibilities?.trim()) throw new AppError("Responsibilities are required", 400);
+  if (!body.requirements?.trim())     throw new AppError("Requirements are required", 400);
+
+  const description = await generateJobDescription(body);
+  return { success: true, description };
 };

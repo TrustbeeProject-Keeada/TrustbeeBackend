@@ -4,6 +4,7 @@ import {
   getJobApplications,
   updateApplicationStatus,
   applyOnWebsite,
+  getMyApplications,
 } from "../controllers/application.controller.js";
 import { protect, restrictTo } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
@@ -14,6 +15,7 @@ const router = Router();
 
 router.use(protect);
 
+router.get("/my", restrictTo("JOB_SEEKER"), getMyApplications);
 router.post("/job/:jobId", restrictTo("JOB_SEEKER"), applyLimiter, applyForJob);
 router.post("/website/:jobBankId", restrictTo("JOB_SEEKER"), applyLimiter, applyOnWebsite);
 

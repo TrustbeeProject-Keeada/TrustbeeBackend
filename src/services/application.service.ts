@@ -2,7 +2,11 @@ import { prisma } from "../config/db.js";
 import { AppError } from "../utils/app.error.js";
 import { UpdateApplicationStatusTypeZ } from "../models/application.model.js";
 import { getBankJobByIdService } from "./job.service.js";
-import { sendRecruiterNotificationEmail } from "../utils/mailer.js";
+import {
+  sendRecruiterNotificationEmail,
+  sendInterviewBookedToJobSeeker,
+  sendInterviewBookedToRecruiter,
+} from "../utils/mailer.js";
 import bcrypt from "bcrypt";
 
 // Arbetssökande: Ansök till ett jobb
@@ -64,7 +68,20 @@ export const updateApplicationStatusService = async (
 ) => {
   const application = await prisma.application.findUnique({
     where: { id: applicationId },
-    include: { job: true },
+    include: {
+      job: {
+        include: { company: true },
+      },
+      jobSeeker: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phoneNumber: true,
+        },
+      },
+    },
   });
 
   if (!application) throw new AppError("Application not found", 404);
@@ -72,9 +89,61 @@ export const updateApplicationStatusService = async (
     throw new AppError("Forbidden", 403);
   }
 
-  return await prisma.application.update({
+  const updated = await prisma.application.update({
     where: { id: applicationId },
     data: { status: data.status },
+  });
+
+  if (data.status === "ACCEPTED") {
+    const { jobSeeker, job } = application;
+    const recruiterEmail = job.company.email;
+    const notifications: Promise<unknown>[] = [];
+
+    notifications.push(
+      sendInterviewBookedToJobSeeker({
+        jobSeekerEmail: jobSeeker.email,
+        jobSeekerFirstName: jobSeeker.firstName,
+        companyName: job.company.companyName,
+        jobTitle: job.title,
+      }).catch((err) => console.error("Failed to send job seeker interview email:", err)),
+    );
+
+    notifications.push(
+      sendInterviewBookedToRecruiter({
+        recruiterEmail,
+        companyName: job.company.companyName,
+        jobSeekerFirstName: jobSeeker.firstName,
+        jobSeekerLastName: jobSeeker.lastName,
+        jobSeekerEmail: jobSeeker.email,
+        jobSeekerPhone: jobSeeker.phoneNumber ?? undefined,
+        jobTitle: job.title,
+      }).catch((err) => console.error("Failed to send recruiter interview email:", err)),
+    );
+
+    await Promise.allSettled(notifications);
+  }
+
+  return updated;
+};
+
+export const getMyApplicationsService = async (jobSeekerId: number) => {
+  return prisma.application.findMany({
+    where: { jobSeekerId },
+    include: {
+      job: {
+        include: {
+          company: {
+            select: {
+              id: true,
+              companyName: true,
+              email: true,
+              logoUrl: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { appliedAt: "desc" },
   });
 };
 

@@ -216,6 +216,44 @@ TASK: Generate a professional CV for this user based on their information above.
   return generatedCv;
 }
 
+export async function generateJobDescription(input: {
+  title: string;
+  responsibilities: string;
+  requirements: string;
+  location?: string;
+  employmentType?: string;
+  additionalInfo?: string;
+}): Promise<string> {
+  const prompt = `You are an expert recruiter and copywriter. Write a professional, engaging job posting description.
+
+Job Title: ${input.title}
+${input.location ? `Location: ${input.location}` : ""}
+${input.employmentType ? `Employment Type: ${input.employmentType}` : ""}
+Key Responsibilities provided by employer: ${input.responsibilities}
+Requirements provided by employer: ${input.requirements}
+${input.additionalInfo ? `Additional info: ${input.additionalInfo}` : ""}
+
+Instructions:
+- Write a compelling 3–5 sentence introduction about the role and its impact
+- Expand the responsibilities into a clear, bulleted list (use "- " prefix)
+- Expand the requirements into a clear, bulleted list under "Requirements:" heading
+- If additional info was given, weave it in naturally
+- Keep the tone professional but welcoming
+- Output plain text only — no markdown headers with #, no HTML
+- Use this structure: [intro paragraph]\n\nResponsibilities:\n[bullet list]\n\nRequirements:\n[bullet list]
+- Do NOT include salary information unless explicitly provided
+- Total length: 200–400 words`;
+
+  const response = await getGeminiClient().models.generateContent({
+    model: DEFAULT_GENAI_MODEL,
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+  });
+
+  const text = (response.text || "").trim();
+  if (!text) throw new Error("AI returned empty job description");
+  return text;
+}
+
 export async function generateCvStructured(
   input: CvGenerationInput,
 ): Promise<CvStructure> {

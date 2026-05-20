@@ -59,6 +59,63 @@ export async function sendSupportMail(data: {
   });
 }
 
+export async function sendInterviewBookedToJobSeeker(data: {
+  jobSeekerEmail: string;
+  jobSeekerFirstName: string;
+  companyName: string;
+  jobTitle: string;
+}) {
+  if (!emailEnabled) {
+    console.log(`[mailer disabled] Interview booked notification for ${data.jobSeekerEmail}`);
+    return;
+  }
+  return mailer.sendMail({
+    from: `"TrustBee" <${process.env.ADMIN_EMAIL}>`,
+    to: data.jobSeekerEmail,
+    subject: `Interview invitation — ${data.jobTitle} at ${data.companyName}`,
+    html: `
+      <h2>Great news, ${data.jobSeekerFirstName}!</h2>
+      <p><strong>${data.companyName}</strong> wants to book an interview with you for the position of <strong>${data.jobTitle}</strong>.</p>
+      <p>They will be in touch with you soon to arrange the details. Make sure your contact information on TrustBee is up to date.</p>
+      <p>Log in to <a href="${process.env.FRONTEND_URL || "https://trustbee.app"}">TrustBee</a> to review your application status.</p>
+      <p>Good luck!<br>The TrustBee Team</p>
+    `,
+    text: `Great news, ${data.jobSeekerFirstName}!\n\n${data.companyName} wants to interview you for ${data.jobTitle}.\n\nThey will contact you soon to arrange details.\n\nGood luck!\nThe TrustBee Team`,
+  });
+}
+
+export async function sendInterviewBookedToRecruiter(data: {
+  recruiterEmail: string;
+  companyName: string;
+  jobSeekerFirstName: string;
+  jobSeekerLastName: string;
+  jobSeekerEmail: string;
+  jobSeekerPhone?: string;
+  jobTitle: string;
+}) {
+  if (!emailEnabled) {
+    console.log(`[mailer disabled] Interview confirmation for recruiter ${data.recruiterEmail}`);
+    return;
+  }
+  return mailer.sendMail({
+    from: `"TrustBee" <${process.env.ADMIN_EMAIL}>`,
+    to: data.recruiterEmail,
+    subject: `Interview booked — ${data.jobSeekerFirstName} ${data.jobSeekerLastName} for ${data.jobTitle}`,
+    html: `
+      <h2>Interview Booking Confirmed</h2>
+      <p>You have booked an interview with <strong>${data.jobSeekerFirstName} ${data.jobSeekerLastName}</strong> for the position of <strong>${data.jobTitle}</strong>.</p>
+      <p>Candidate contact details:</p>
+      <ul>
+        <li>Email: <a href="mailto:${data.jobSeekerEmail}">${data.jobSeekerEmail}</a></li>
+        ${data.jobSeekerPhone ? `<li>Phone: ${data.jobSeekerPhone}</li>` : ""}
+      </ul>
+      <p>Please reach out to arrange the interview schedule.</p>
+      <p>Best regards,<br>The TrustBee Team</p>
+    `,
+    text: `Interview booked with ${data.jobSeekerFirstName} ${data.jobSeekerLastName} for ${data.jobTitle}.\n\nCandidate email: ${data.jobSeekerEmail}\n${data.jobSeekerPhone ? `Phone: ${data.jobSeekerPhone}\n` : ""}\nPlease contact them to arrange the schedule.\n\nThe TrustBee Team`,
+  });
+}
+
 export async function sendRecruiterNotificationEmail(data: {
   recruiterEmail: string;
   recruiterName: string;

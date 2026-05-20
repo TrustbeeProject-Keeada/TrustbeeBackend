@@ -4,6 +4,7 @@ import {
   MatchMakingService,
   GenerateCvService,
   GenerateCvPdfService,
+  GenerateJobDescriptionService,
 } from "../services/ai.service.js";
 
 export const MatchMakingController = async (
@@ -42,6 +43,19 @@ export const GenerateCvController = async (
 
     const cvData = await GenerateCvService(Number(jobseekerId));
     res.status(200).json({ status: "success", data: cvData });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const GenerateJobDescriptionController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const result = await GenerateJobDescriptionService(req.body);
+    res.status(200).json({ status: "success", data: result });
   } catch (error) {
     next(error);
   }

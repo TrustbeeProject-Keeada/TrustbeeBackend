@@ -5,6 +5,7 @@ import {
   getJobApplicationsService,
   updateApplicationStatusService,
   applyOnWebsiteService,
+  getMyApplicationsService,
 } from "../services/application.service.js";
 
 export const applyForJob = async (
@@ -60,6 +61,21 @@ export const updateApplicationStatus = async (
       req.body,
     );
     res.status(200).json({ status: "success", data: updatedApplication });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMyApplications = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return next(new AppError("Unauthorized", 401));
+    const applications = await getMyApplicationsService(userId);
+    res.status(200).json({ status: "success", data: applications });
   } catch (error) {
     next(error);
   }

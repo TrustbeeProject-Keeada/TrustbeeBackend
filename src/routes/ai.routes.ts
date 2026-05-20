@@ -4,6 +4,7 @@ import {
   MatchMakingController,
   GenerateCvController,
   GenerateCvPdfController,
+  GenerateJobDescriptionController,
 } from "../controllers/ai.controller.js";
 import { aiLimiter } from "../middleware/limiters.js";
 
@@ -19,5 +20,7 @@ router.post("/matchmake", aiLimiter, MatchMakingController);
 router.post("/generate-cv/:jobseekerId", aiLimiter, GenerateCvController);
 
 router.post("/generate-cv-pdf/:jobseekerId", aiLimiter, GenerateCvPdfController);
+
+router.post("/generate-job-description", aiLimiter, GenerateJobDescriptionController);
 
 export default router;
