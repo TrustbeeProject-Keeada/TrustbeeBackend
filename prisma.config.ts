@@ -8,7 +8,5 @@ export default defineConfig({
   },
   datasource: {
     url: env("DATABASE_URL") ?? "",
-    // DIRECT_URL bypasses the pooler for migrations (required with Supabase pooler)
-    directUrl: env("DIRECT_URL"),
   },
 });
