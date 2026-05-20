@@ -91,15 +91,40 @@ const mergeArray = (primary?: any[], fallback?: any[]) =>
 export const MatchMakingService = async (jobAddId: number, jobseekerId: number) => {
   const jobAdd = await fetchJobById(jobAddId);
   const jobseeker = await prisma.jobSeeker.findUnique({
-    select: { id: true, cv: true },
+    select: {
+      id: true, cv: true, firstName: true, lastName: true,
+      bio: true, skills: true, languages: true, personalStatement: true,
+      city: true, country: true,
+    },
     where: { id: jobseekerId },
   });
 
   if (!jobAdd || !jobseeker) throw new AppError("Job or Job Seeker not found", 404);
-  if (!jobseeker.cv)         throw new AppError("Job Seeker CV not found", 404);
 
-  const cvText = await extractCvText(jobseeker.cv as any);
-  if (!cvText?.trim()) throw new AppError("Failed to extract text from CV", 400);
+  let cvText: string | null = null;
+
+  // Try to extract text from uploaded CV binary first
+  if (jobseeker.cv) {
+    try {
+      cvText = await extractCvText(jobseeker.cv as any);
+    } catch {
+      // fall through to profile-text fallback
+    }
+  }
+
+  // Fall back to profile text when no CV file is available
+  if (!cvText?.trim()) {
+    const profileParts: string[] = [];
+    if (jobseeker.bio)               profileParts.push(`About: ${jobseeker.bio}`);
+    if (jobseeker.personalStatement) profileParts.push(`Personal Statement: ${jobseeker.personalStatement}`);
+    if (jobseeker.skills?.length)    profileParts.push(`Skills: ${jobseeker.skills.join(", ")}`);
+    if (jobseeker.languages?.length) profileParts.push(`Languages: ${jobseeker.languages.join(", ")}`);
+    const location = [jobseeker.city, jobseeker.country].filter(Boolean).join(", ");
+    if (location) profileParts.push(`Location: ${location}`);
+
+    if (!profileParts.length) throw new AppError("Job seeker profile is empty — please add skills or a bio before matching.", 400);
+    cvText = profileParts.join("\n");
+  }
 
   const jobDescription = String(jobAdd.description || "");
   if (!jobDescription) throw new AppError("Job description is empty or missing", 400);

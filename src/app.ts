@@ -51,9 +51,13 @@ export const createApp = () => {
     .split(",")
     .map((o) => o.trim());
 
+  // Optional regex for Vercel preview deployments, e.g. "https://trustbee-frontend-.*\.vercel\.app"
+  const corsPatternRaw = process.env.CORS_ORIGIN_PATTERN;
+  const corsPattern = corsPatternRaw ? new RegExp(corsPatternRaw) : null;
+
   const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || (corsPattern && corsPattern.test(origin))) {
         callback(null, true);
       } else {
         callback(new Error(`Origin not allowed: ${origin}`));
