@@ -34,6 +34,9 @@ export const createApp = () => {
 
   const isProd = process.env.NODE_ENV === "production";
 
+  // Trust one proxy hop (Render's load balancer) so X-Forwarded-For is correct
+  if (isProd) app.set("trust proxy", 1);
+
   // Security headers
   app.use(
     helmet({
